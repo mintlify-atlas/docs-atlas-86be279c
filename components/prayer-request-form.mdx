@@ -1,0 +1,446 @@
+---
+title: PrayerRequestForm Component
+description: Prayer request submission form with anonymous option and Formspree integration
+---
+
+The `PrayerRequestForm` component provides a compassionate interface for collecting prayer requests with options for anonymous submission and automatic Formspree integration.
+
+## Features
+
+- **Two-Column Layout**: Form on left, informational content on right
+- **Anonymous Submission**: Optional checkbox to submit without sharing name
+- **Formspree Integration**: Sends requests via Formspree API
+- **Client-Side Validation**: Ensures meaningful prayer requests (10+ characters)
+- **Success State**: Shows confirmation message after submission
+- **Auto-Reset**: Form resets after 5 seconds for new submissions
+- **Progressive Enhancement**: Works with or without JavaScript
+
+## Installation
+
+```astro
+import PrayerRequestForm from '../components/PrayerRequestForm.astro';
+```
+
+## Basic Usage
+
+From `src/pages/index.astro:3`:
+
+```astro
+---
+import PrayerRequestForm from '../components/PrayerRequestForm.astro';
+---
+
+<PrayerRequestForm />
+```
+
+## Props
+
+<ParamField path="title" type="string" default="Prayer Requests">
+  Heading text displayed on the right side of the form.
+</ParamField>
+
+<ParamField path="description" type="string" default="Share your prayer needs...">
+  Descriptive text explaining the prayer request process.
+  
+  Default: `"Share your prayer needs with our community. We're here to support you in prayer."`
+</ParamField>
+
+<ParamField path="showAnonymous" type="boolean" default="true">
+  Whether to display the anonymous submission checkbox option.
+</ParamField>
+
+## Examples
+
+### Default Configuration
+
+```astro
+<PrayerRequestForm />
+```
+
+### Custom Title and Description
+
+```astro
+<PrayerRequestForm 
+  title="Submit a Prayer Request"
+  description="Our prayer team is here to support you. Share your needs confidentially."
+/>
+```
+
+### Without Anonymous Option
+
+```astro
+<PrayerRequestForm showAnonymous={false} />
+```
+
+## Form Fields
+
+### Name Field
+
+```html
+<input
+  type="text"
+  id="prayer-name"
+  name="name"
+  placeholder="John Doe"
+/>
+```
+
+- Optional by default (when `showAnonymous={true}`)
+- Becomes required when anonymous checkbox is unchecked
+- Automatically manages required attribute based on anonymous state
+
+### Email Field
+
+```html
+<input
+  type="email"
+  id="prayer-email"
+  name="email"
+  placeholder="your@email.com"
+/>
+```
+
+- Always optional
+- Used for follow-up communication
+- Not required for submission
+
+### Prayer Request Field
+
+```html
+<textarea
+  id="prayer-request"
+  name="request"
+  required
+  rows="6"
+  placeholder="Share your prayer need here..."
+></textarea>
+```
+
+- **Required field**
+- Minimum 10 characters (validated client-side)
+- 6 rows for comfortable input
+- Non-resizable for consistent layout
+
+### Anonymous Checkbox
+
+```html
+<input
+  type="checkbox"
+  id="prayer-anonymous"
+  name="anonymous"
+/>
+```
+
+- When checked: Name field becomes optional
+- When unchecked: Name field becomes required
+- Shown only if `showAnonymous={true}`
+
+## Formspree Integration
+
+### Setup
+
+1. Create a Formspree account at https://formspree.io
+2. Create a new form and get your form ID
+3. Update the action URL in the component:
+
+```astro
+<form 
+  id="prayer-request-form" 
+  action="https://formspree.io/f/YOUR_FORM_ID_HERE"
+  method="POST"
+>
+```
+
+### Submission Process
+
+```javascript
+const response = await fetch(form.action, {
+  method: 'POST',
+  body: formData,
+  headers: {
+    'Accept': 'application/json'
+  }
+});
+```
+
+### Enhanced Payload
+
+The component adds hidden fields for better email organization:
+
+```javascript
+formData.append('_anonymous', anonymous ? 'true' : 'false');
+formData.append('_subject', anonymous 
+  ? 'Anonymous Prayer Request' 
+  : `Prayer Request from ${name || 'Someone'}`);
+```
+
+**Email Subject Examples:**
+- `"Prayer Request from John Doe"`
+- `"Anonymous Prayer Request"`
+
+## Validation
+
+Client-side validation ensures quality submissions:
+
+```javascript
+const request = formData.get('request')?.toString().trim();
+
+if (!request || request.length < 10) {
+  alert('Please provide a meaningful prayer request (at least 10 characters).');
+  return;
+}
+```
+
+**Validation Rules:**
+- Prayer request must be at least 10 characters
+- Cannot be empty or whitespace only
+- If not anonymous, name should be provided
+
+## Success State
+
+After successful submission:
+
+```astro
+<div id="prayer-success" class="hidden">
+  <div class="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
+    <svg class="w-16 h-16 text-green-600 mx-auto mb-4"><!-- Checkmark --></svg>
+    <h3 class="text-2xl font-semibold text-green-900 mb-2">
+      Prayer Request Submitted
+    </h3>
+    <p class="text-green-700 text-lg">
+      Thank you for sharing. Our prayer team will be lifting you up in prayer.
+    </p>
+  </div>
+</div>
+```
+
+1. Form is hidden
+2. Success message appears
+3. After 5 seconds:
+   - Form is reset
+   - Success message is hidden
+   - Form reappears for new submissions
+
+## Two-Column Layout
+
+```astro
+<div class="grid lg:grid-cols-2 gap-16 items-start">
+  <!-- Left: Form -->
+  <div class="bg-gray-50 rounded-2xl p-8">
+    <form><!-- Form fields --></form>
+  </div>
+  
+  <!-- Right: Information -->
+  <div>
+    <h2>{title}</h2>
+    <p>{description}</p>
+    <!-- Feature highlights -->
+  </div>
+</div>
+```
+
+**Responsive Behavior:**
+- Desktop (`lg` and up): Two columns side-by-side
+- Mobile: Stacked vertically
+
+## Feature Highlights
+
+The right column includes feature cards:
+
+### Confidential & Private
+
+```astro
+<div class="flex items-start gap-3">
+  <svg class="w-6 h-6 text-brand"><!-- Shield icon --></svg>
+  <div>
+    <h3>Confidential & Private</h3>
+    <p>Your prayer requests are shared only with our dedicated prayer team</p>
+  </div>
+</div>
+```
+
+### Prayed Over Daily
+
+```astro
+<div class="flex items-start gap-3">
+  <svg class="w-6 h-6 text-brand"><!-- Clock icon --></svg>
+  <div>
+    <h3>Prayed Over Daily</h3>
+    <p>Our prayer team lifts up every request in prayer</p>
+  </div>
+</div>
+```
+
+## Anonymous Logic
+
+Dynamic name field requirement based on checkbox:
+
+```javascript
+anonymousCheckbox.addEventListener('change', () => {
+  if (anonymousCheckbox.checked) {
+    nameInput.removeAttribute('required');
+  } else {
+    nameInput.setAttribute('required', 'required');
+  }
+});
+```
+
+**Behavior:**
+- Checked: Name becomes optional (grayed out label)
+- Unchecked: Name becomes required (asterisk shown)
+
+## Auto-Reset
+
+Form automatically resets after successful submission:
+
+```javascript
+setTimeout(() => {
+  form.reset();
+  form.classList.remove('hidden');
+  successMessage.classList.add('hidden');
+  nameInput.setAttribute('required', 'required');
+  anonymousCheckbox.checked = false;
+}, 5000);
+```
+
+## Error Handling
+
+```javascript
+try {
+  const response = await fetch(form.action, {
+    method: 'POST',
+    body: formData,
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to submit via Formspree.');
+  }
+  
+  // Success handling
+} catch (error) {
+  console.error('Error submitting prayer request:', error);
+  alert('We encountered an error. Please check your network or contact support.');
+}
+```
+
+## Loading State
+
+Button shows loading indicator during submission:
+
+```javascript
+// Before submission
+submitBtn.disabled = true;
+btnText.classList.add('hidden');
+btnLoading.classList.remove('hidden');
+
+// After completion (success or error)
+submitBtn.disabled = false;
+btnText.classList.remove('hidden');
+btnLoading.classList.add('hidden');
+```
+
+**Button States:**
+- Default: "Submit Prayer Request"
+- Loading: "Submitting..."
+- Disabled during submission
+
+## Accessibility
+
+- Semantic HTML structure
+- Proper label associations
+- Focus management
+- Keyboard navigation support
+- Screen reader friendly
+- Clear validation messages
+
+## Styling
+
+```css
+.prayer-request-section {
+  font-family: 'Albert Sans', system-ui, sans-serif;
+}
+```
+
+Uses Tailwind utility classes:
+- `bg-gray-50`: Light gray form background
+- `rounded-2xl`: Rounded corners
+- `focus:border-brand`: Brand color focus states
+- `transition-colors`: Smooth color transitions
+
+## Customization
+
+### Change Success Message Timing
+
+```javascript
+setTimeout(() => {
+  // Reset form
+}, 10000); // 10 seconds instead of 5
+```
+
+### Add Additional Fields
+
+```astro
+<div>
+  <label for="prayer-phone">Phone Number (optional)</label>
+  <input
+    type="tel"
+    id="prayer-phone"
+    name="phone"
+  />
+</div>
+```
+
+### Modify Validation
+
+```javascript
+if (!request || request.length < 20) { // Require 20+ characters
+  alert('Please provide at least 20 characters.');
+  return;
+}
+```
+
+### Custom Formspree Configuration
+
+Add hidden fields for Formspree features:
+
+```astro
+<input type="hidden" name="_replyto" value="prayers@locc.us" />
+<input type="hidden" name="_next" value="https://locc.us/prayer/thanks" />
+<input type="hidden" name="_cc" value="pastor@locc.us" />
+```
+
+## Testing
+
+### Test Form Submission
+
+1. Use Formspree test mode
+2. Check browser console for errors
+3. Verify email delivery
+4. Test anonymous vs. named submissions
+
+### Console Testing
+
+```javascript
+// Get form data
+const form = document.getElementById('prayer-request-form');
+const formData = new FormData(form);
+
+for (let [key, value] of formData.entries()) {
+  console.log(key, value);
+}
+```
+
+## Privacy & Security
+
+- HTTPS form submission
+- No data stored locally
+- Formspree handles email delivery
+- Optional anonymous submission
+- Clear privacy messaging
+
+## Related Components
+
+Used on:
+- **Home Page** (`/`): Main prayer request section

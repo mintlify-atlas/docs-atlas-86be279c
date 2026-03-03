@@ -1,0 +1,419 @@
+---
+title: SalvationMarquee Component
+description: Scrolling marquee of salvation testimonies built with React and @joycostudio/marquee
+---
+
+The `SalvationMarquee` component displays scrolling testimonies of faith and salvation using React and the `@joycostudio/marquee` library. It features pause-on-hover, smooth infinite scrolling, and customizable testimony cards.
+
+<Note>
+  This is a **React component** (`.tsx`), not an Astro component. It requires the `client:load` directive when used in Astro pages.
+</Note>
+
+## Features
+
+- **Infinite Scroll**: Seamless looping marquee animation
+- **Pause on Hover**: Stops scrolling when user hovers over testimonies
+- **Customizable Testimonies**: Easily add or modify testimony content
+- **Responsive Design**: Works on all screen sizes
+- **Default Content**: Includes 8 sample testimonies
+- **Accessible**: Proper semantic HTML structure
+
+## Installation
+
+```astro
+import SalvationMarquee from '../components/SalvationMarquee';
+```
+
+<Warning>
+  Note the import path has **no file extension**. React components in Astro don't use `.tsx` in imports.
+</Warning>
+
+## Basic Usage
+
+From `src/pages/index.astro:4`:
+
+```astro
+---
+import SalvationMarquee from '../components/SalvationMarquee';
+---
+
+<SalvationMarquee client:load />
+```
+
+<Note>
+  The `client:load` directive is **required** to hydrate the React component on page load.
+</Note>
+
+## Props
+
+<ParamField path="testimonies" type="Testimony[]">
+  Array of testimony objects to display in the marquee. If not provided, uses default testimonies.
+
+  **Testimony Interface:**
+  ```typescript
+  interface Testimony {
+    name: string;      // Person's name (e.g., "Sarah M.")
+    quote: string;     // Their testimony quote
+    year?: string;     // Optional year of salvation
+  }
+  ```
+</ParamField>
+
+## Examples
+
+### Default Testimonies
+
+```astro
+<SalvationMarquee client:load />
+```
+
+Uses 8 built-in testimonies:
+- Sarah M. - "God's grace transformed my life..."
+- Michael T. - "I found peace and purpose..."
+- And 6 more...
+
+### Custom Testimonies
+
+```astro
+---
+const customTestimonies = [
+  {
+    name: "John D.",
+    quote: "Jesus saved me from addiction and gave me new life.",
+    year: "2025"
+  },
+  {
+    name: "Mary S.",
+    quote: "Through God's love, I found healing and restoration.",
+    year: "2024"
+  },
+  {
+    name: "Peter K.",
+    quote: "My family was transformed by the power of prayer."
+  }
+];
+---
+
+<SalvationMarquee testimonies={customTestimonies} client:load />
+```
+
+### With Client Directives
+
+```astro
+<!-- Load immediately -->
+<SalvationMarquee client:load />
+
+<!-- Load when visible -->
+<SalvationMarquee client:visible />
+
+<!-- Load when idle -->
+<SalvationMarquee client:idle />
+```
+
+## Testimony Object Structure
+
+```typescript
+interface Testimony {
+  name: string;       // Required: Person's name
+  quote: string;      // Required: Their testimony
+  year?: string;      // Optional: Year of salvation
+}
+```
+
+**Example:**
+```typescript
+const testimony: Testimony = {
+  name: "Sarah M.",
+  quote: "God's grace transformed my life when I thought all hope was lost.",
+  year: "2023"
+};
+```
+
+## Default Testimonies
+
+The component includes 8 default testimonies:
+
+```typescript
+const defaultTestimonies: Testimony[] = [
+  {
+    name: "Sarah M.",
+    quote: "God's grace transformed my life when I thought all hope was lost.",
+    year: "2023"
+  },
+  {
+    name: "Michael T.",
+    quote: "I found peace and purpose through faith in Jesus Christ.",
+    year: "2024"
+  },
+  // ... 6 more testimonies
+];
+```
+
+## Component Structure
+
+### Section Header
+
+```jsx
+<div className="text-center mb-16">
+  <span className="inline-block px-4 py-2 bg-brand/10 text-brand text-sm font-medium mb-4">
+    Stories of Faith
+  </span>
+  <h2 className="text-4xl lg:text-5xl font-light mb-6 text-gray-900">
+    Lives Transformed by God's Grace
+  </h2>
+  <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+    Hear from those who have found hope, peace, and new life through Jesus Christ
+  </p>
+</div>
+```
+
+### Marquee Configuration
+
+```jsx
+<Marquee 
+  speed={30}              // Pixels per second
+  direction={-1}          // -1 = right to left, 1 = left to right
+  play={!isPaused}        // Controls animation state
+  rootClassName="salvation-marquee"
+>
+```
+
+### Testimony Card
+
+```jsx
+<div className="mx-3 bg-white border border-gray-200 rounded-2xl p-6 
+                shadow-sm hover:shadow-md transition-shadow 
+                min-w-[320px] max-w-[380px]">
+  <div className="flex flex-col gap-4">
+    <!-- Icon -->
+    <svg className="w-5 h-5 text-brand"><!-- Light bulb icon --></svg>
+    
+    <!-- Quote -->
+    <p className="text-gray-700 text-base leading-relaxed">
+      {testimony.quote}
+    </p>
+    
+    <!-- Attribution -->
+    <div className="flex items-center justify-between pt-2 border-t">
+      <span className="text-sm font-medium">— {testimony.name}</span>
+      {testimony.year && <span className="text-xs text-gray-500">{testimony.year}</span>}
+    </div>
+  </div>
+</div>
+```
+
+## Pause on Hover
+
+Implemented with React state:
+
+```tsx
+const [isPaused, setIsPaused] = useState(false);
+
+<div
+  onMouseEnter={() => setIsPaused(true)}
+  onMouseLeave={() => setIsPaused(false)}
+>
+  <Marquee play={!isPaused}>
+    {/* Content */}
+  </Marquee>
+</div>
+```
+
+**Behavior:**
+- Mouse hover: Animation pauses
+- Mouse leave: Animation resumes
+- Touch devices: Continuous scroll
+
+## Seamless Looping
+
+Testimonies are duplicated for smooth infinite scrolling:
+
+```tsx
+const duplicatedTestimonies = [...testimonies, ...testimonies];
+```
+
+This ensures no gap appears when the marquee loops.
+
+## Styling
+
+### Container Styling
+
+```tsx
+<div 
+  className="salvation-marquee-wrapper bg-white overflow-hidden" 
+  style={{ fontFamily: "'Albert Sans', system-ui, sans-serif" }}
+>
+```
+
+### Card Styling
+
+- **Size**: `min-w-[320px] max-w-[380px]`
+- **Spacing**: `mx-3` (horizontal margin)
+- **Background**: White with border
+- **Hover**: Elevated shadow effect
+- **Border Radius**: `rounded-2xl`
+
+### Responsive Typography
+
+- Mobile: `text-4xl`
+- Desktop: `lg:text-5xl`
+
+## Dependencies
+
+Required npm packages:
+
+```json
+{
+  "dependencies": {
+    "react": "^18.0.0",
+    "@joycostudio/marquee": "latest"
+  }
+}
+```
+
+Install via:
+```bash
+npm install react @joycostudio/marquee
+```
+
+## Performance
+
+- Uses CSS transforms for smooth animation
+- React state management for pause functionality
+- Optimized rendering with React
+- No layout thrashing
+
+## Accessibility
+
+- Semantic HTML structure
+- Readable font sizes
+- High contrast text
+- Hover states for interaction
+- Keyboard accessible (though not interactive)
+
+## Customization
+
+### Change Scroll Speed
+
+```tsx
+<Marquee speed={50}> {/* Faster */}
+<Marquee speed={15}> {/* Slower */}
+```
+
+### Change Scroll Direction
+
+```tsx
+<Marquee direction={1}>  {/* Left to right */}
+<Marquee direction={-1}> {/* Right to left */}
+```
+
+### Modify Card Appearance
+
+```tsx
+<div className="mx-3 bg-gradient-to-br from-blue-50 to-purple-50 
+                border-2 border-blue-200 rounded-xl p-8">
+  {/* Custom styling */}
+</div>
+```
+
+### Change Icon
+
+Replace the light bulb icon:
+
+```tsx
+<svg className="w-5 h-5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+</svg>
+{/* Heart icon */}
+```
+
+### Add More Testimonies
+
+```tsx
+const moreTestimonies = [
+  ...defaultTestimonies,
+  {
+    name: "New Person",
+    quote: "New testimony here",
+    year: "2026"
+  }
+];
+```
+
+## Loading from API
+
+```astro
+---
+import SalvationMarquee from '../components/SalvationMarquee';
+
+// Fetch testimonies from API
+const response = await fetch('https://api.example.com/testimonies');
+const testimonies = await response.json();
+---
+
+<SalvationMarquee testimonies={testimonies} client:load />
+```
+
+## Browser Compatibility
+
+- Modern browsers (Chrome, Firefox, Safari, Edge)
+- Requires JavaScript enabled
+- Uses CSS transforms and flexbox
+- React 18+ compatible
+
+## Troubleshooting
+
+### Component Not Appearing
+
+Ensure client directive is present:
+```astro
+<SalvationMarquee client:load />
+```
+
+### Animation Not Smooth
+
+Check browser hardware acceleration:
+```css
+.salvation-marquee {
+  will-change: transform;
+}
+```
+
+### Testimonies Not Showing
+
+Verify testimony object structure:
+```typescript
+// ✅ Correct
+{ name: "John", quote: "Text here", year: "2025" }
+
+// ❌ Incorrect
+{ person: "John", text: "Text here" }
+```
+
+## Related Components
+
+Used on:
+- **Home Page** (`/`): Main testimonies section
+
+## Migration from Astro
+
+If converting an Astro component to React:
+
+```astro
+<!-- Old Astro way -->
+---
+const testimonies = [...];
+---
+<div>{testimonies.map(...)}</div>
+```
+
+```tsx
+// New React way
+import { useState } from 'react';
+
+function Component() {
+  const testimonies = [...];
+  return <div>{testimonies.map(...)}</div>;
+}
+```

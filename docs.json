@@ -1,122 +1,106 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Lake Ozark Christian Church",
+  "theme": "almond",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#9e1e3e",
+    "light": "#b84660",
+    "dark": "#841834"
   },
   "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/InactiveBen/Lake-Ozark"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/InactiveBen/Lake-Ozark"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
+              "introduction",
               "quickstart",
-              "development"
+              "project-structure"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/pages-routing",
+              "concepts/components",
+              "concepts/layouts"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Components",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "components/overview",
+              "components/accessibility-menu",
+              "components/alert-banner",
+              "components/cookie-banner",
+              "components/donation-form",
+              "components/prayer-request-form",
+              "components/salvation-marquee",
+              "components/seasonal-banner",
+              "components/sunday-calendar",
+              "components/weather-banner"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Pages",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "pages/home",
+              "pages/about",
+              "pages/worship",
+              "pages/programs",
+              "pages/children-youth",
+              "pages/giving",
+              "pages/blog"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "utilities/location-check",
+              "utilities/liturgical-calendar",
+              "utilities/youtube-videos"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "API Routes",
             "pages": [
-              "api-reference/introduction"
+              "api/thumbnail-proxy",
+              "api/videos-json"
             ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Deployment",
+        "groups": [
           {
-            "group": "Endpoint examples",
+            "group": "Deployment",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "deployment/vercel",
+              "deployment/configuration"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

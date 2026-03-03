@@ -1,0 +1,248 @@
+---
+title: Home page
+description: The main landing page with dynamic content based on visitor location
+---
+
+## Overview
+
+The home page (`index.astro`) is the main landing page of the Lake Ozark Christian Church website. It features dynamic content personalization based on visitor location, multiple interactive sections, and comprehensive functionality including forms, maps, countdowns, and video integration.
+
+**File location**: `src/pages/index.astro`
+
+## Key features
+
+### Server-side rendering
+
+The page uses SSR to enable dynamic location checking:
+
+```astro
+// This page uses server-side rendering for location checking
+export const prerender = false;
+
+// Safely get local visitor status
+let isLocal = false;
+try {
+  isLocal = await isLocalVisitor();
+} catch (error) {
+  console.warn('Location check failed, defaulting to non-local:', error);
+  isLocal = false;
+}
+```
+
+### Location-based personalization
+
+The page adapts content based on whether the visitor is local or from out of town using the `isLocalVisitor()` utility function.
+
+**For local visitors:**
+- Hero message: "There's a place for you here."
+- Focus on community programs and after-school activities
+- Encourages regular participation
+
+**For visitors:**
+- Hero message: "Plan Your Visit to Lake Ozark Christian"
+- Emphasis on visitor information and directions
+- Family-friendly worship details
+
+### Announcement banner
+
+Configurable announcement banner with toggle control:
+
+```astro
+// Toggle this to show/hide the announcement banner
+const showAnnouncementBanner = true;
+const bannerText = "Welcome Reception for Rev. Lina Eddy...";
+const bannerLink = "/blog/4";
+const bannerLinkText = "Learn more →";
+```
+
+## Major sections
+
+### Hero section
+
+- Full-width background image with overlay
+- Typed.js animation for dynamic messaging
+- Conditional content based on visitor location
+- Call-to-action buttons
+
+### Visit us section
+
+- Interactive Mapbox map with route visualization
+- Dynamic distance calculation and personalized greeting
+- Service time and parking information
+- Accessibility details
+
+### Live service countdown
+
+- Flip clock countdown to next service
+- Uses `@pqina/flip` library
+- Dynamic title updates based on time until service
+- Shows/hides based on proximity to service time
+
+### After-school program
+
+Location-aware content:
+
+**Local visitors see:**
+- After-school program details
+- Registration link
+- Program schedule and features
+
+**Non-local visitors see:**
+- Children's Church information
+- Nursery care details
+- Family-friendly worship options
+
+### Donation section
+
+- Embedded `DonationForm` component
+- Tax-deductible information
+- Secure payment processing details
+- Alternative giving methods
+
+### Prayer request form
+
+Embedded `PrayerRequestForm` component for visitor engagement.
+
+### Salvation stories marquee
+
+Scrolling testimonials using the `SalvationMarquee` React component:
+
+```astro
+<SalvationMarquee client:load />
+```
+
+### Recent services
+
+Dynamic YouTube video integration:
+- Loads latest service videos
+- Loading states and error handling
+- Video modal for playback
+
+### Calendar section
+
+Embedded Google Calendar showing upcoming events.
+
+## Components used
+
+- `Layout` - Main layout wrapper
+- `PrayerRequestForm` - Prayer submission form
+- `SalvationMarquee` - Testimonial carousel
+- `DonationForm` - Online giving form
+
+## Blog posts integration
+
+Fetches and displays recent blog posts:
+
+```astro
+const postsGlob = import.meta.glob('../blogs/*.md', { eager: true });
+const posts = Object.values(postsGlob) as any[];
+const recentPosts = posts
+  .filter(post => post.frontmatter && post.frontmatter.id)
+  .sort((a, b) => (b.frontmatter?.id || 0) - (a.frontmatter?.id || 0))
+  .slice(0, 3);
+```
+
+## Interactive features
+
+### Mapbox integration
+
+Advanced mapping with:
+- Church location marker
+- User location detection (browser geolocation)
+- Route visualization
+- Distance and time calculation
+- Fallback to IP-based geolocation
+- LocalStorage caching for performance
+
+```javascript
+// Check localStorage first for stored user location
+const storedLocation = localStorage.getItem('user-location');
+
+// Try browser geolocation (most accurate)
+navigator.geolocation.getCurrentPosition(
+  async (position) => {
+    const { longitude, latitude } = position.coords;
+    await useLocation(longitude, latitude, undefined, 'browser');
+  },
+  async (error) => {
+    await fallbackToIPLocation();
+  }
+);
+```
+
+### Video modal
+
+Modal system for service video playback with:
+- Click-to-play functionality
+- Close button
+- Backdrop click to close
+- Season badges for liturgical context
+
+### Toast notifications
+
+Reusable toast system for user feedback:
+
+```javascript
+function showToast(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration: number = 5000)
+```
+
+## Performance optimizations
+
+### Image preloading
+
+```astro
+<link rel="preload" href={welcomeImage.url} as="image" fetchpriority="high" />
+```
+
+### Script loading strategy
+
+- Typed.js loaded from CDN
+- Mapbox GL JS loaded asynchronously
+- Flip clock loaded on-demand
+
+### Lazy loading
+
+Images below the fold use `loading="lazy"`.
+
+## External dependencies
+
+- **Typed.js** (`v2.1.0`) - Hero text animation
+- **Mapbox GL JS** (`v3.3.0`) - Interactive maps
+- **@pqina/flip** - Flip clock countdown
+- **Stripe** - Payment processing (via DonationForm)
+
+## UTM tracking
+
+All links include UTM parameters for analytics:
+
+```astro
+href="/worship?utm_source=lakeozarkdisciples&utm_medium=homepage&utm_campaign=hero&utm_content=service_times"
+```
+
+## Configuration
+
+Key configurable elements:
+
+```astro
+// Announcement banner
+const showAnnouncementBanner = true;
+
+// Hero image
+const welcomeImage = {
+  url: "https://usercontent.donorkit.io/clients/LOCC/...",
+  alt: "Church Sanctuary"
+};
+
+// Mapbox access token
+const accessToken = 'pk.eyJ1IjoiZG9ub3JraXQi...';
+
+// Church coordinates
+const churchCoords: [number, number] = [-92.64159, 38.19839];
+```
+
+## Related pages
+
+- [Worship page](/pages/worship) - Service times and visitor info
+- [Programs page](/pages/programs) - Ministry details
+- [Children & Youth page](/pages/children-youth) - Family programs
+- [Giving page](/pages/giving) - Donation information

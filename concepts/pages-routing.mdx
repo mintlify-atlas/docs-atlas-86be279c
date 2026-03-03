@@ -1,0 +1,309 @@
+---
+title: Pages & routing
+description: Learn how Astro's file-based routing system works in the Lake Ozark Christian Church website
+---
+
+The Lake Ozark Christian Church website uses Astro's file-based routing system, where the file structure in `src/pages/` automatically determines your site's URL structure.
+
+## File-based routing
+
+Astro uses **file-based routing** to generate your URLs. Every `.astro`, `.md`, or `.ts` file in the `src/pages/` directory becomes a route on your website.
+
+<CodeGroup>
+```bash File structure
+src/pages/
+├── index.astro           # → /
+├── about.astro           # → /about
+├── worship.astro         # → /worship
+├── blog/
+│   ├── index.astro       # → /blog
+│   └── [ID].astro        # → /blog/1, /blog/2, etc.
+├── donate/
+│   └── thanks.astro      # → /donate/thanks
+└── api/
+    ├── videos.json.ts    # → /api/videos.json
+    └── thumbnail-proxy.ts # → /api/thumbnail-proxy
+```
+</CodeGroup>
+
+## Static pages
+
+Static pages are created using `.astro` files. These pages are pre-rendered at build time by default.
+
+### Example: About page
+
+Here's how the about page (`src/pages/about.astro`) is structured:
+
+```astro src/pages/about.astro
+---
+import Layout from '../layouts/Layout.astro';
+
+const heroImage = {
+  url: "https://usercontent.donorkit.io/clients/LOCC/7767E813-185B-48B7-A7C8-A5C919258FEA%20(1).jpeg",
+  alt: "Church Sanctuary"
+};
+---
+
+<Layout title="Who We Are">
+  <section class="relative overflow-hidden bg-white">
+    <!-- Page content -->
+  </section>
+</Layout>
+```
+
+The URL for this file is automatically `/about`.
+
+## Dynamic routes
+
+Dynamic routes use square brackets in the filename to create pages from dynamic data.
+
+### Example: Blog post pages
+
+The blog uses a dynamic route at `src/pages/blog/[ID].astro` to generate individual post pages:
+
+```astro src/pages/blog/[ID].astro
+---
+import Layout from '../../layouts/Layout.astro';
+import type { GetStaticPaths } from 'astro';
+
+// Prerender this page as static HTML
+export const prerender = true;
+
+// Generate pages for each blog post
+export const getStaticPaths = (async () => {
+  const postsGlob = import.meta.glob('../../blogs/*.md', { eager: true });
+  const posts = Object.values(postsGlob) as any[];
+
+  return posts.map((post) => {
+    return {
+      params: { ID: post.frontmatter.id.toString() },
+      props: {
+        post: {
+          frontmatter: post.frontmatter,
+          Content: post.Content,
+        },
+      },
+    };
+  });
+}) satisfies GetStaticPaths;
+
+const { post } = Astro.props;
+---
+
+<Layout title={post.frontmatter.title}>
+  <!-- Blog post content -->
+</Layout>
+```
+
+This creates routes like:
+- `/blog/1`
+- `/blog/2`
+- `/blog/4`
+
+## API routes
+
+API routes are TypeScript files that return JSON or other data formats. They use the `.ts` extension and export HTTP method handlers.
+
+### Example: Videos API endpoint
+
+The videos API (`src/pages/api/videos.json.ts`) returns JSON data:
+
+```typescript src/pages/api/videos.json.ts
+import type { APIRoute } from 'astro';
+import { fetchLatestVideos } from '../../utils/fetchYouTubeVideos.js';
+
+// Ensure this route runs at request time
+export const prerender = false;
+
+// Cache for 5 minutes
+const CACHE_MAX_AGE = 300;
+
+export const GET: APIRoute = async ({ params, request }) => {
+  try {
+    const videos = await fetchLatestVideos();
+    
+    return new Response(JSON.stringify(videos), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=${CACHE_MAX_AGE}`,
+      },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to fetch videos' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+};
+```
+
+<Note>
+API routes automatically append `.json` to the URL when the filename includes it: `videos.json.ts` → `/api/videos.json`
+</Note>
+
+### Example: Thumbnail proxy endpoint
+
+Another API route example that proxies images with CORS headers:
+
+```typescript src/pages/api/thumbnail-proxy.ts
+import type { APIRoute } from 'astro';
+
+export const prerender = false;
+
+export const GET: APIRoute = async ({ url, request }) => {
+  const imageUrl = url.searchParams.get('url');
+  
+  if (!imageUrl) {
+    return new Response('Missing url parameter', { status: 400 });
+  }
+
+  // Validate allowed domains
+  const allowedDomains = [
+    'usercontent.donorkit.io',
+    'cdn.lakeozarkdisciples.org',
+    'img.youtube.com'
+  ];
+  
+  const urlObj = new URL(imageUrl);
+  if (!allowedDomains.some(domain => urlObj.hostname.includes(domain))) {
+    return new Response('Domain not allowed', { status: 403 });
+  }
+
+  const imageResponse = await fetch(imageUrl);
+  const imageBuffer = await imageResponse.arrayBuffer();
+
+  return new Response(imageBuffer, {
+    status: 200,
+    headers: {
+      'Content-Type': imageResponse.headers.get('content-type') || 'image/jpeg',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'public, max-age=86400',
+    },
+  });
+};
+```
+
+## Server-side rendering (SSR)
+
+By default, pages are pre-rendered at build time. To enable server-side rendering for a page, use the `prerender` export:
+
+```astro src/pages/index.astro
+---
+import Layout from '../layouts/Layout.astro';
+import { isLocalVisitor } from '../utils/locationCheck';
+
+// Enable SSR for this page
+export const prerender = false;
+
+// Check visitor location at request time
+let isLocal = false;
+try {
+  isLocal = await isLocalVisitor();
+} catch (error) {
+  console.warn('Location check failed:', error);
+  isLocal = false;
+}
+---
+
+<Layout title="Welcome">
+  {isLocal ? (
+    <h1>Welcome, neighbor!</h1>
+  ) : (
+    <h1>Plan Your Visit</h1>
+  )}
+</Layout>
+```
+
+<Warning>
+Pages with `export const prerender = false` require a Node.js server environment and cannot be deployed to static hosting.
+</Warning>
+
+## Routing patterns
+
+<Steps>
+
+<Step title="Static routes">
+Simple files map directly to URLs:
+- `about.astro` → `/about`
+- `worship.astro` → `/worship`
+</Step>
+
+<Step title="Nested routes">
+Folders create nested paths:
+- `legal/privacy.astro` → `/legal/privacy`
+- `donate/thanks.astro` → `/donate/thanks`
+</Step>
+
+<Step title="Dynamic routes">
+Square brackets create dynamic segments:
+- `blog/[ID].astro` → `/blog/1`, `/blog/2`
+- Uses `getStaticPaths()` to generate pages
+</Step>
+
+<Step title="API routes">
+TypeScript files export HTTP handlers:
+- `api/videos.json.ts` → `/api/videos.json`
+- `api/thumbnail-proxy.ts` → `/api/thumbnail-proxy`
+</Step>
+
+</Steps>
+
+## Prerendering configuration
+
+Control when pages are rendered:
+
+<Tabs>
+  <Tab title="Static (default)">
+    ```astro
+    ---
+    // No export needed - static by default
+    import Layout from '../layouts/Layout.astro';
+    ---
+    ```
+    Pages are built at compile time.
+  </Tab>
+  
+  <Tab title="Server-side">
+    ```astro
+    ---
+    export const prerender = false;
+    import Layout from '../layouts/Layout.astro';
+    ---
+    ```
+    Pages are rendered on each request.
+  </Tab>
+  
+  <Tab title="Force static">
+    ```astro
+    ---
+    export const prerender = true;
+    import type { GetStaticPaths } from 'astro';
+    
+    export const getStaticPaths = () => {
+      // Generate static pages
+    };
+    ---
+    ```
+    Explicitly marks dynamic routes as static.
+  </Tab>
+</Tabs>
+
+## Index routes
+
+Files named `index.astro` become the default page for that directory:
+
+- `pages/index.astro` → `/`
+- `pages/blog/index.astro` → `/blog`
+- `pages/donate/index.astro` → `/donate`
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Components" icon="cube" href="/concepts/components">
+    Learn about the component architecture
+  </Card>
+  <Card title="Layouts" icon="layout" href="/concepts/layouts">
+    Understand how layouts wrap page content
+  </Card>
+</CardGroup>

@@ -1,0 +1,142 @@
+---
+title: Components Overview
+description: Comprehensive guide to all components in the Lake Ozark Christian Church Astro website
+---
+
+The Lake Ozark Christian Church website is built with a collection of reusable Astro and React components designed for accessibility, user engagement, and church ministry needs.
+
+## Component Categories
+
+### Forms & User Input
+
+Components that collect user information and facilitate engagement.
+
+<CardGroup cols={2}>
+  <Card title="DonationForm" icon="credit-card" href="/components/donation-form">
+    Secure donation form with one-time and recurring options, fee coverage, and DonorKit integration
+  </Card>
+  <Card title="PrayerRequestForm" icon="hands-praying" href="/components/prayer-request-form">
+    Prayer request submission form with anonymous option and Formspree integration
+  </Card>
+</CardGroup>
+
+### UI & Alerts
+
+Components for displaying important messages and notifications to users.
+
+<CardGroup cols={2}>
+  <Card title="AlertBanner" icon="bell" href="/components/alert-banner">
+    Modal alert dialog for important announcements with dismissal tracking
+  </Card>
+  <Card title="CookieBanner" icon="cookie" href="/components/cookie-banner">
+    GDPR/CCPA-compliant cookie consent banner with granular privacy controls
+  </Card>
+  <Card title="SeasonalBanner" icon="calendar-star" href="/components/seasonal-banner">
+    Automatic liturgical season banners with countdown timers for holidays
+  </Card>
+  <Card title="WeatherBanner" icon="cloud-rain" href="/components/weather-banner">
+    Emergency service cancellation banner for weather-related closures
+  </Card>
+</CardGroup>
+
+### Accessibility
+
+Components that enhance website accessibility for all users.
+
+<CardGroup cols={1}>
+  <Card title="AccessibilityMenu" icon="universal-access" href="/components/accessibility-menu">
+    Comprehensive WCAG 2.1 AA compliant accessibility controls panel
+  </Card>
+</CardGroup>
+
+### Calendar & Events
+
+Components for displaying church events and schedules.
+
+<CardGroup cols={1}>
+  <Card title="SundayCalendar" icon="calendar" href="/components/sunday-calendar">
+    Dynamic schedule of upcoming Sunday services with API integration
+  </Card>
+</CardGroup>
+
+### Interactive Displays
+
+Components that showcase dynamic content and testimonies.
+
+<CardGroup cols={1}>
+  <Card title="SalvationMarquee" icon="message-quote" href="/components/salvation-marquee">
+    Scrolling marquee of salvation testimonies (React component)
+  </Card>
+</CardGroup>
+
+## Component Architecture
+
+### Astro Components (.astro)
+
+Most components are built as Astro components, which provide:
+- Server-side rendering for better performance
+- Scoped styles that don't leak
+- Built-in TypeScript support with Props interfaces
+- Client-side interactivity via `<script>` tags
+
+### React Components (.tsx)
+
+Some components use React for advanced interactivity:
+- **SalvationMarquee**: Uses `@joycostudio/marquee/react` for smooth scrolling
+
+## Common Patterns
+
+### Props Interface
+
+All components define their props using TypeScript interfaces:
+
+```typescript
+interface Props {
+  title?: string;
+  description?: string;
+  showOption?: boolean;
+}
+```
+
+### Client-Side Scripts
+
+Many components include client-side JavaScript for interactivity:
+
+```astro
+<script>
+  // Client-side code runs in the browser
+  document.addEventListener('DOMContentLoaded', () => {
+    // Initialize component
+  });
+</script>
+```
+
+### Style Scoping
+
+Components use both scoped and global styles:
+
+```astro
+<style>
+  /* Scoped styles (default) */
+  .my-class { }
+</style>
+
+<style is:global>
+  /* Global styles when needed */
+  .global-class { }
+</style>
+```
+
+## Best Practices
+
+<Note>
+  When using these components, always:
+  - Import from the correct path: `'../components/ComponentName.astro'`
+  - Provide required props (marked with no `?` in the interface)
+  - Test accessibility features with keyboard navigation
+  - Check responsive behavior on mobile devices
+</Note>
+
+## Next Steps
+
+Explore individual component documentation to learn about specific props, usage examples, and integration patterns.

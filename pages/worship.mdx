@@ -1,0 +1,203 @@
+---
+title: Worship page
+description: Sunday service information, visitor details, and location map
+---
+
+## Overview
+
+The Worship page (`worship.astro`) provides essential information about Sunday services, visitor information, and an interactive location map. It features location-aware content personalization.
+
+**File location**: `src/pages/worship.astro`
+
+## Server-side rendering
+
+The page uses location detection for personalized content:
+
+```astro
+import { isLocalVisitor } from '../utils/locationCheck';
+
+const isLocal = await isLocalVisitor();
+```
+
+## Page sections
+
+### Hero section
+
+Location-aware hero messaging:
+
+**For local visitors:**
+```astro
+<p>There's a place for you here.</p>
+<h1>Worship With Us</h1>
+<p>Join us in worship as we celebrate God's love...</p>
+```
+
+**For visitors:**
+```astro
+<p>Visiting the Lake of the Ozarks?</p>
+<h1>Join Us for Worship</h1>
+<p>Whether you're here for a weekend or extended stay...</p>
+```
+
+### Visit us section
+
+**Service details:**
+- **Time:** Sundays at 10:30 AM
+- **Duration:** About an hour
+- **Dress code:** Casual dress welcome
+- **Address:** 1560 Bagnell Dam Blvd, Lake Ozark, MO 65049
+- **Parking:** Free parking available
+
+**Interactive map:**
+
+```astro
+<LocationMap height="600px" showRoute={true} containerId="worship-map" />
+```
+
+The `LocationMap` component provides:
+- Church location marker
+- User location detection
+- Route visualization
+- Distance calculation
+
+### What to expect section
+
+First-time visitor information:
+
+**Key elements:**
+
+1. **Warm Welcome**
+   - Greeters to help find your way
+   - Questions answered
+
+2. **Uplifting Music**
+   - Contemporary and traditional hymns
+   - Blend of styles
+
+3. **Relevant Message**
+   - Bible-based teaching
+   - Connects with everyday life
+
+```astro
+<div class="space-y-4">
+  <div class="flex items-start gap-3">
+    <div class="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center">
+      <svg><!-- Icon --></svg>
+    </div>
+    <div>
+      <h3>Warm Welcome</h3>
+      <p>Greeters will help you find your way...</p>
+    </div>
+  </div>
+</div>
+```
+
+### Calendar section
+
+Embedded Sunday calendar component:
+
+```astro
+<SundayCalendar />
+```
+
+Displays upcoming Sunday services and special events.
+
+## Components used
+
+- `Layout` - Page layout wrapper
+- `LocationMap` - Interactive Mapbox map
+- `SundayCalendar` - Upcoming services calendar
+
+## Call-to-action buttons
+
+**Primary CTAs:**
+
+```astro
+<a href="#visit">Service Times</a>
+<a href="/live">Watch Online</a>
+<a href="https://www.google.com/maps/dir//Lake+Ozark+Christian+Church...">Get Directions</a>
+<a href="tel:573-365-3366">Call Us</a>
+```
+
+All external links include UTM parameters:
+
+```astro
+href="/live?utm_source=lakeozarkdisciples&utm_medium=worship_page&utm_campaign=hero&utm_content=watch_online"
+```
+
+## Design features
+
+### Icon system
+
+Consistent icon usage with Heroicons:
+
+```astro
+<svg class="w-6 h-6 text-brand mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="..."/>
+</svg>
+```
+
+**Icons used:**
+- Clock (time)
+- Map pin (location)
+- Archive (parking)
+- Users (children's programs)
+- Music note (worship)
+- Book (message)
+
+### Card pattern
+
+```astro
+<div class="bg-gray-50 rounded-xl p-6 space-y-4">
+  <!-- Content -->
+</div>
+```
+
+## Typography
+
+Albert Sans font family throughout:
+
+```css
+* {
+  font-family: 'Albert Sans', system-ui, sans-serif;
+}
+```
+
+## Image optimization
+
+Hero image with preload:
+
+```astro
+const heroImage = {
+  url: "https://usercontent.donorkit.io/clients/LOCC/69CA977C-2462-4E2A-B067-A2FCD5D87A3F.jpeg",
+  alt: "Interior view of Lake Ozark Christian Church sanctuary"
+};
+
+<link rel="preload" href={heroImage.url} as="image" fetchpriority="high" />
+```
+
+## Location-aware content
+
+The page adapts to visitor type:
+
+| Content | Local Visitors | Out-of-Town Visitors |
+|---------|---------------|---------------------|
+| Hero title | "Worship With Us" | "Join Us for Worship" |
+| Hero subtitle | "There's a place for you here." | "Visiting the Lake of the Ozarks?" |
+| Emphasis | Community involvement | Visitor experience |
+
+## Service information highlights
+
+**Highlighted features:**
+- No dress code
+- About one hour duration
+- Children's programs available
+- Nursery care during service
+- Online streaming option
+- Accessible entrance (south side)
+
+## Related pages
+
+- [Home page](/pages/home) - Main landing page
+- [Children & Youth page](/pages/children-youth) - Kids programs
+- [Programs page](/pages/programs) - Ministry overview

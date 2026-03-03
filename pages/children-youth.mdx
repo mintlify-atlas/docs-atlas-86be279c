@@ -1,0 +1,308 @@
+---
+title: Children & Youth page
+description: Comprehensive information about children's programs including Sunday programs, after-school activities, and special events
+---
+
+## Overview
+
+The Children & Youth page (`children-youth.astro`) provides detailed information about all programs for children from birth through youth. It features location-aware content and an announcement banner system.
+
+**File location**: `src/pages/children-youth.astro`
+
+## Location-aware content
+
+The page adapts based on visitor type:
+
+```astro
+import { isLocalVisitor } from '../utils/locationCheck';
+
+const isLocal = await isLocalVisitor();
+```
+
+## Announcement banner
+
+Configurable banner for timely announcements:
+
+```astro
+const showAnnouncementBanner = true;
+const bannerText = "After-school program now enrolling for K-5th grade";
+const bannerLink = "https://docs.google.com/forms/d/e/...";
+const bannerLinkText = "Register now →";
+```
+
+## Programs overview
+
+Array-based program data:
+
+```astro
+const programs = [
+  {
+    title: "Amos and Friends",
+    time: "Sundays during 10:30 AM Service",
+    description: "Interactive puppet show with Amos the Mouse and Pastor Ron",
+    icon: `<path.../>` // SVG path
+  },
+  // ... more programs
+];
+```
+
+**Programs listed:**
+1. Amos and Friends
+2. Children's Church
+3. After-School Program
+4. Boy Scouts
+
+## Hero section
+
+### For local visitors
+
+```astro
+<p>Nurturing young hearts and minds</p>
+<h1>Children & Youth</h1>
+<p>Safe, engaging programs where children learn about God's love...</p>
+<div class="flex flex-col sm:flex-row gap-4">
+  <a href="#sunday-programs">Our Programs</a>
+  <a href="#visitor-info">First Time? Start Here</a>
+</div>
+```
+
+### For visitors
+
+```astro
+<p>Visiting with family?</p>
+<h1>Family-Friendly Worship</h1>
+<p>Your children are welcome here. We offer engaging programs...</p>
+<div class="flex flex-col sm:flex-row gap-4">
+  <a href="#sunday-programs">Children's Programs</a>
+  <a href="#visitor-info">What to Expect</a>
+</div>
+```
+
+## Programs overview section
+
+### For local visitors
+
+Displays 4-column grid of program cards:
+
+```astro
+<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+  {programs.map(program => (
+    <div class="text-center p-8">
+      <div class="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg class="w-8 h-8 text-brand">
+          <Fragment set:html={program.icon} />
+        </svg>
+      </div>
+      <h2>{program.title}</h2>
+      <p class="text-sm font-medium text-brand">{program.time}</p>
+      <p class="text-sm text-gray-600">{program.description}</p>
+    </div>
+  ))}
+</div>
+```
+
+### For visitors
+
+"What to Expect" section with 3-column grid:
+- Children's Church (Ages 4-13)
+- Nursery Care (Ages 0-3)
+- Amos and Friends
+
+## After-school program section
+
+### For local visitors
+
+Detailed after-school program information:
+
+```astro
+<h2>After-School Program</h2>
+<p>Lake Ozark Christian Church is offering a free after-school program 
+for children, grades Kindergarten through 5th grade...</p>
+
+<div class="flex flex-col sm:flex-row gap-4">
+  <a href="https://docs.google.com/forms/d/e/...">Register Now</a>
+  <a href="/connect">Contact Us</a>
+</div>
+```
+
+**Program details:**
+- **Grades:** K-5th (Heritage and Upper Elementary Schools)
+- **Day:** Wednesdays
+- **Time:** 3:30pm - 5:30pm
+- **Cost:** Free
+- **Includes:** Transportation, snacks, activities
+
+### For visitors
+
+Typical Sunday morning flow:
+
+```astro
+<h2>A Typical Sunday Morning</h2>
+
+<div class="space-y-4">
+  <div class="flex items-start gap-3">
+    <svg><!-- Icon --></svg>
+    <div>
+      <h3>Check-In Process</h3>
+      <p>Friendly greeters will help you check in your children...</p>
+    </div>
+  </div>
+  <div class="flex items-start gap-3">
+    <svg><!-- Icon --></svg>
+    <div>
+      <h3>Service Flow</h3>
+      <p>Children start in main service, then move to programs...</p>
+    </div>
+  </div>
+  <div class="flex items-start gap-3">
+    <svg><!-- Icon --></svg>
+    <div>
+      <h3>Safety First</h3>
+      <p>Secure check-in/out and background-checked volunteers...</p>
+    </div>
+  </div>
+</div>
+```
+
+## Sunday programs section
+
+### Amos and Friends & Children's Church
+
+```astro
+<h2>Amos and Friends & Children's Church</h2>
+<p>Every Sunday morning at our 10:30 am Worship Service, 
+our youngest are invited for special programming</p>
+```
+
+**Interactive learning features:**
+- Interactive puppet show with Amos the Mouse
+- Bible lessons through crafts and games
+- Safe environment with caring volunteers
+
+```astro
+<div class="flex items-start gap-4">
+  <div class="w-8 h-8 bg-brand/10 rounded-full flex items-center justify-center">
+    <svg class="w-4 h-4 text-brand"><!-- Checkmark --></svg>
+  </div>
+  <div>
+    <h4 class="font-semibold text-gray-900">Interactive Puppet Show</h4>
+    <p>Engaging stories with Amos the Mouse and Pastor Ron</p>
+  </div>
+</div>
+```
+
+## Additional programs section
+
+### Pastor's Baptism Class
+
+```astro
+<div class="bg-white p-8 rounded-2xl border border-gray-200 hover:shadow-lg transition-all">
+  <div class="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mb-6">
+    <svg><!-- Mobile icon --></svg>
+  </div>
+  <h3>Pastor's Baptism Class</h3>
+  <p>It is the practice of the Disciples of Christ to baptize folks when they are 
+  ready to accept Jesus as their Lord and Savior...</p>
+</div>
+```
+
+### Boy Scouts Pack #21
+
+```astro
+<div class="bg-white p-8 rounded-2xl border border-gray-200 hover:shadow-lg transition-all">
+  <div class="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mb-6">
+    <svg><!-- Scout icon --></svg>
+  </div>
+  <h3>Boy Scouts Pack #21</h3>
+  <p>Lake Ozark Christian Church is a proud sponsor of Boy Scout and 
+  Cub Scout Pack #21...</p>
+</div>
+```
+
+## Scripture quote section
+
+Featured Bible verse:
+
+```astro
+<div class="bg-gray-50 p-12 rounded-2xl">
+  <blockquote class="text-2xl lg:text-3xl font-light text-gray-900 mb-6">
+    "Let the little children come to me, and do not stop them; 
+    for it is to such as these that the kingdom of heaven belongs."
+  </blockquote>
+  <p class="text-lg text-gray-600 font-medium">Matthew 19:14</p>
+</div>
+```
+
+## Get involved section
+
+Final CTA:
+
+```astro
+<h2>Get Involved</h2>
+<p>Want to learn more about our children's programs or get involved? 
+We'd love to hear from you!</p>
+
+<div class="flex flex-col sm:flex-row justify-center gap-4">
+  <a href="/connect">Contact Us</a>
+  <a href="https://docs.google.com/forms/d/e/...">Register for After-School Program</a>
+</div>
+```
+
+## Custom styles
+
+### Smooth scrolling
+
+```css
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 2rem;
+}
+```
+
+### Hero section sizing
+
+```css
+.hero-section {
+  min-height: calc(100vh - var(--header-offset, 0px));
+  min-height: calc(100dvh - var(--header-offset, 0px));
+}
+```
+
+### Header offset calculation
+
+JavaScript to handle dynamic header heights:
+
+```javascript
+function updateHeaderOffset() {
+  const topBar = document.querySelector('.top-bar');
+  const mainHeader = document.querySelector('.main-header');
+  const seasonalBanner = document.querySelector('.seasonal-banner');
+  
+  let totalOffset = 0;
+  // Calculate total offset from all header elements
+  
+  document.documentElement.style.setProperty('--header-offset', `${totalOffset}px`);
+}
+```
+
+## Images used
+
+1. **Hero image** - Children's Time activities
+2. **After-school/Family section** - Amos and Friends puppet show
+3. **Sunday programs section** - Children participating in activities
+
+## External links
+
+**Registration form:**
+```astro
+href="https://docs.google.com/forms/d/e/1FAIpQLSdIri3EaabwsN84Al7Xd7zVnWI7Jzfaoyu6NVkENI6w9FRaeA/viewform?usp=sf_link"
+```
+
+## Related pages
+
+- [Programs page](/pages/programs) - All church programs
+- [Worship page](/pages/worship) - Sunday service details
+- [Home page](/pages/home) - Main landing page

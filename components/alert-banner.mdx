@@ -1,0 +1,223 @@
+---
+title: AlertBanner Component
+description: Modal alert dialog for displaying important announcements with session-based dismissal tracking
+---
+
+The `AlertBanner` component displays important announcements in a modal dialog overlay. It includes automatic expiration, session-based dismissal tracking, and support for external links.
+
+## Features
+
+- **Modal Dialog**: Full-screen overlay with centered content
+- **Auto-expiration**: Automatically hides after a specified date/time
+- **Dismissal Tracking**: Remembers dismissal via sessionStorage
+- **External Links**: Optional redirect button instead of dismiss
+- **Keyboard Accessible**: Escape key closes the dialog
+- **Click Outside**: Backdrop click dismisses the alert
+
+## Installation
+
+```astro
+import AlertBanner from '../components/AlertBanner.astro';
+```
+
+## Basic Usage
+
+```astro
+<AlertBanner
+  title="Important Notice"
+  message="We have updated our service times. Join us at 9:00 AM and 10:30 AM!"
+  dismissText="Got it"
+  messageId="service-times-update"
+  expiresAt="2026-12-31T23:59:59Z"
+/>
+```
+
+## Props
+
+<ParamField path="message" type="string" required>
+  The main message content to display in the alert.
+</ParamField>
+
+<ParamField path="title" type="string" default="Important Notice">
+  The heading/title text displayed at the top of the alert.
+</ParamField>
+
+<ParamField path="dismissText" type="string" default="Dismiss">
+  Text shown on the dismiss/action button.
+</ParamField>
+
+<ParamField path="messageId" type="string">
+  Unique identifier for dismissal tracking. If not provided, a random ID is generated. Use a meaningful ID to track specific messages across sessions.
+</ParamField>
+
+<ParamField path="expiresAt" type="string">
+  ISO 8601 date string indicating when the alert should no longer be shown. Format: `YYYY-MM-DDTHH:MM:SSZ`
+</ParamField>
+
+<ParamField path="externalLink" type="string">
+  Optional URL to redirect users when they click the button. When provided, the button becomes a link instead of a dismiss action.
+</ParamField>
+
+## Examples
+
+### Simple Alert
+
+```astro
+<AlertBanner
+  message="Our website has been updated with new features!"
+/>
+```
+
+### With Expiration
+
+```astro
+<AlertBanner
+  title="Holiday Schedule"
+  message="Church will be closed on Christmas Day. Join us for special services on Christmas Eve at 5 PM."
+  messageId="christmas-2026"
+  expiresAt="2026-12-26T00:00:00Z"
+/>
+```
+
+### With External Link
+
+```astro
+<AlertBanner
+  title="Register Now"
+  message="Our annual retreat is coming up! Spaces are limited."
+  dismissText="Register Here"
+  externalLink="https://example.com/retreat-registration"
+  messageId="retreat-2026"
+/>
+```
+
+### Development Testing
+
+From `src/layouts/Layout.astro:260`:
+
+```astro
+{
+  !IS_PRODUCTION && (
+    <AlertBanner
+      title="Development Testing Alert" 
+      message="This is a test message and should not show in production. Please dismiss."
+      messageId="test-alert"
+      expiresAt="2025-11-27T01:50:00Z"
+      dismissText="Dismiss"
+    />
+  )
+}
+```
+
+## Behavior
+
+### Dismissal Logic
+
+1. User clicks "Dismiss" button or backdrop
+2. Component stores `alert-{messageId}` in `sessionStorage`
+3. On page refresh, checks sessionStorage before rendering
+4. Alert won't show again during the current browser session
+
+### Expiration Logic
+
+1. Component compares current date to `expiresAt`
+2. If current date > expiration date, component doesn't render
+3. Works on both server (Astro) and client (JavaScript) side
+
+### External Link Behavior
+
+When `externalLink` is provided:
+- Button becomes an `<a>` tag instead of `<button>`
+- Opens in new tab (`target="_blank"`)
+- Includes `rel="noopener noreferrer"` for security
+- Still records dismissal before redirecting
+
+## Styling
+
+The component uses utility classes and inline styles:
+
+```astro
+<div class="fixed inset-0 bg-black/70 z-[150] flex items-center justify-center p-6">
+  <div class="bg-white rounded-lg max-w-sm w-full p-6 animate-in">
+    <!-- Content -->
+  </div>
+</div>
+```
+
+### Custom Fade-in Animation
+
+```css
+.animate-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+```
+
+## Z-Index Layering
+
+The alert uses `z-[150]` to appear above most content:
+- Standard content: `z-0` to `z-50`
+- Navigation/Header: `z-100`
+- Cookie Banner: `z-9999`
+- **AlertBanner: `z-150`**
+- Accessibility Menu: `z-140`
+
+## Session vs. Persistent Storage
+
+<Note>
+  The AlertBanner uses **sessionStorage** instead of localStorage or cookies. This means:
+  - Dismissal persists only during the current browser tab/window session
+  - Alert will reappear in new tabs or after browser restart
+  - No privacy concerns since data is temporary
+</Note>
+
+## Accessibility
+
+- Uses `role="alertdialog"` for screen readers
+- Includes `aria-modal="true"` to indicate modal behavior
+- Escape key support for keyboard users
+- Focus automatically on modal when it appears
+
+## Use Cases
+
+- **Important Announcements**: Service time changes, building closures
+- **Event Promotions**: Upcoming special events or registration deadlines
+- **Emergency Notices**: Weather cancellations (see WeatherBanner for specialized version)
+- **Feature Announcements**: Website updates or new resources
+- **Call-to-Action**: Directing users to registration forms or external resources
+
+## Advanced Customization
+
+### Custom Styling
+
+To change appearance, modify the inline styles or add custom classes:
+
+```astro
+<div class="your-custom-class">
+  <!-- component content -->
+</div>
+```
+
+### Dynamic Message ID
+
+Generate unique IDs based on content:
+
+```astro
+---
+const messageId = `alert-${new Date().toISOString().split('T')[0]}`;
+---
+
+<AlertBanner
+  message="Today's announcement"
+  messageId={messageId}
+/>
+```
+
+## Related Components
+
+- **WeatherBanner**: Specialized alert for weather cancellations
+- **SeasonalBanner**: Non-modal banner for seasonal messages

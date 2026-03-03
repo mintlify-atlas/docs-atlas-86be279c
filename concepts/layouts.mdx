@@ -1,0 +1,392 @@
+---
+title: Layouts
+description: Learn how layouts wrap page content and provide consistent structure across the site
+---
+
+Layouts are special Astro components that wrap page content, providing consistent structure, SEO metadata, and shared UI elements across multiple pages.
+
+## The Layout component
+
+The primary layout is `src/layouts/Layout.astro`, which wraps all pages on the site.
+
+### Layout structure
+
+```astro src/layouts/Layout.astro
+---
+import Header from '../ui/Header.astro';
+import Footer from '../ui/Footer.astro';
+import PrivacyBanner from '../components/PrivacyBanner.astro';
+import SeasonalBanner from '../components/SeasonalBanner.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  type?: 'website' | 'article' | 'profile';
+}
+
+const { 
+  title,
+  description = "Lake Ozark Christian Church - A welcoming Christian community...",
+  ogImage,
+  type = 'website'
+} = Astro.props;
+
+const SITE_NAME = "Lake Ozark Christian Church";
+const BASE_URL = Astro.url.origin;
+const CANONICAL_URL = Astro.url.href.replace(/\/$/, "");
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <title>{title} | {SITE_NAME}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={CANONICAL_URL} />
+    
+    <!-- More meta tags -->
+  </head>
+  <body>
+    <a href="#main-content" class="skip-to-main-content">
+      Skip to main content
+    </a>
+    
+    <Header />
+    <SeasonalBanner />
+    
+    <main id="main-content" role="main">
+      <slot />
+    </main>
+    
+    <Footer />
+    <PrivacyBanner />
+  </body>
+</html>
+```
+
+## Layout props
+
+The Layout component accepts several props to customize each page:
+
+<ParamField path="title" type="string" required>
+  The page title. Appears in browser tabs and search results.
+  
+  ```astro
+  <Layout title="About Us">
+  ```
+</ParamField>
+
+<ParamField path="description" type="string">
+  The meta description for SEO. Defaults to a site-wide description if not provided.
+  
+  ```astro
+  <Layout 
+    title="About Us" 
+    description="Learn about our church community and mission"
+  >
+  ```
+</ParamField>
+
+<ParamField path="ogImage" type="string">
+  Custom Open Graph image URL for social media sharing. Defaults to a site-wide image.
+  
+  ```astro
+  <Layout 
+    title="Blog Post"
+    ogImage="https://example.com/image.jpg"
+  >
+  ```
+</ParamField>
+
+<ParamField path="type" type="'website' | 'article' | 'profile'">
+  The Open Graph type. Defaults to `'website'`.
+  
+  ```astro
+  <Layout 
+    title="Church Blog"
+    type="article"
+  >
+  ```
+</ParamField>
+
+## Using layouts in pages
+
+Import and wrap your page content with the Layout component:
+
+```astro src/pages/about.astro
+---
+import Layout from '../layouts/Layout.astro';
+
+const heroImage = {
+  url: "https://usercontent.donorkit.io/clients/LOCC/sanctuary.jpeg",
+  alt: "Church Sanctuary"
+};
+---
+
+<Layout title="Who We Are">
+  <section class="relative overflow-hidden">
+    <img src={heroImage.url} alt={heroImage.alt} />
+    <h1>Who We Are</h1>
+  </section>
+  
+  <section>
+    <h2>Our Story</h2>
+    <p>Lake Ozark Christian Church is a community of faith...</p>
+  </section>
+</Layout>
+```
+
+## SEO and metadata
+
+The Layout component automatically generates comprehensive SEO metadata:
+
+### Open Graph tags
+
+```html
+<meta property="og:title" content="About Us | Lake Ozark Christian Church" />
+<meta property="og:description" content="Learn about our church community" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://example.com/og-image.jpg" />
+<meta property="og:url" content="https://lakeozarkdisciples.org/about" />
+```
+
+### Twitter Card tags
+
+```html
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="About Us | Lake Ozark Christian Church" />
+<meta name="twitter:description" content="Learn about our church community" />
+<meta name="twitter:image" content="https://example.com/og-image.jpg" />
+```
+
+### Canonical URL
+
+```html
+<link rel="canonical" href="https://lakeozarkdisciples.org/about" />
+```
+
+### Structured data (Schema.org)
+
+The layout includes JSON-LD structured data for better search engine understanding:
+
+```javascript
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Church",
+  "name": "Lake Ozark Christian Church",
+  "url": "https://lakeozarkdisciples.org",
+  "description": description,
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "1560 Bagnell Dam Blvd.",
+    "addressLocality": "Lake Ozark",
+    "addressRegion": "MO",
+    "postalCode": "65049",
+    "addressCountry": "US"
+  },
+  "telephone": "+15733733333",
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Sunday",
+      "opens": "10:30",
+      "closes": "12:00"
+    }
+  ]
+};
+```
+
+## Performance optimizations
+
+The layout includes several performance enhancements:
+
+### DNS prefetching
+
+```html
+<link rel="dns-prefetch" href="https://api.mapbox.com" />
+<link rel="dns-prefetch" href="https://www.youtube.com" />
+<link rel="dns-prefetch" href="https://geo.locc.us" />
+```
+
+### Resource preconnecting
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://api.mapbox.com" crossorigin />
+```
+
+### Font preloading
+
+```html
+<link 
+  rel="preload"
+  href="https://fonts.gstatic.com/s/albertsans/v1/albertsans.woff2"
+  as="font"
+  type="font/woff2"
+  crossorigin
+/>
+```
+
+## Accessibility features
+
+The layout includes built-in accessibility enhancements:
+
+### Skip to main content
+
+```astro
+<a href="#main-content" class="skip-to-main-content">
+  Skip to main content
+</a>
+
+<style>
+  .skip-to-main-content {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+  }
+  .skip-to-main-content:focus {
+    left: 50%;
+    top: 0.5rem;
+    transform: translateX(-50%);
+    opacity: 1;
+  }
+</style>
+```
+
+### Semantic HTML
+
+```html
+<body>
+  <Header />
+  
+  <main id="main-content" role="main" aria-label="Main content">
+    <slot />
+  </main>
+  
+  <Footer />
+</body>
+```
+
+## Multiple layouts
+
+The project includes specialized layouts for different page types:
+
+### LegalLayout
+
+For terms, privacy policy, and legal pages:
+
+```astro src/layouts/LegalLayout.astro
+---
+import Layout from './Layout.astro';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<Layout title={title} type="article">
+  <div class="legal-container">
+    <article class="prose">
+      <slot />
+    </article>
+  </div>
+</Layout>
+```
+
+### LiveLayout
+
+For live streaming pages:
+
+```astro src/layouts/LiveLayout.astro
+---
+import Layout from './Layout.astro';
+
+interface Props {
+  title: string;
+  isLive?: boolean;
+}
+
+const { title, isLive } = Astro.props;
+---
+
+<Layout title={title}>
+  {isLive && <div class="live-indicator">LIVE NOW</div>}
+  <slot />
+</Layout>
+```
+
+## Layout best practices
+
+<Steps>
+
+<Step title="Always provide a title">
+  ```astro
+  <Layout title="About Us">
+  ```
+  The title is required and crucial for SEO.
+</Step>
+
+<Step title="Customize descriptions for important pages">
+  ```astro
+  <Layout 
+    title="Worship Services"
+    description="Join us for Sunday worship at 10:30 AM. All are welcome!"
+  >
+  ```
+  Custom descriptions improve search rankings.
+</Step>
+
+<Step title="Use custom OG images for shareable content">
+  ```astro
+  <Layout 
+    title="Blog Post"
+    ogImage="https://example.com/blog-featured.jpg"
+    type="article"
+  >
+  ```
+  Better social media previews increase engagement.
+</Step>
+
+<Step title="Choose the right layout type">
+  - Use `Layout` for most pages
+  - Use `LegalLayout` for legal documents
+  - Use `LiveLayout` for streaming pages
+</Step>
+
+</Steps>
+
+## The slot mechanism
+
+Layouts use Astro's `<slot />` to inject page content:
+
+```astro Layout.astro
+<main id="main-content">
+  <slot /> <!-- Page content goes here -->
+</main>
+```
+
+When you use the layout:
+
+```astro page.astro
+<Layout title="My Page">
+  <h1>This content replaces the slot</h1>
+  <p>Everything here is injected into the layout.</p>
+</Layout>
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Pages & routing" icon="map" href="/concepts/pages-routing">
+    Learn about Astro's routing system
+  </Card>
+  <Card title="Components" icon="cube" href="/concepts/components">
+    Explore reusable UI components
+  </Card>
+</CardGroup>

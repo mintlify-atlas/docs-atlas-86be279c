@@ -1,0 +1,382 @@
+---
+title: DonationForm Component
+description: Secure donation form with recurring gifts, fee coverage, and DonorKit integration
+---
+
+The `DonationForm` component provides a comprehensive donation experience with support for one-time and recurring gifts, transaction fee coverage, and secure payment processing via DonorKit.
+
+## Features
+
+- **Gift Types**: One-time or recurring donations
+- **Billing Frequency**: Weekly, bi-weekly, monthly, or annual
+- **Preset Amounts**: Quick-select buttons for common amounts
+- **Custom Amounts**: Any amount from $5 to $999,999
+- **Fee Coverage**: Option to cover 2.9% + $0.30 processing fee
+- **Real-time Calculations**: Dynamic fee and total displays
+- **Email Receipts**: Automatic receipt delivery
+- **DonorKit Integration**: Secure payment processing and subscription management
+- **Legal Compliance**: Full disclosure and refund policy links
+- **Multiple Instances**: Support for multiple forms on one page
+
+## Installation
+
+```astro
+import DonationForm from '../components/DonationForm.astro';
+```
+
+## Basic Usage
+
+```astro
+<DonationForm />
+```
+
+## Props
+
+<ParamField path="id" type="string" default="donation">
+  Unique identifier for the form. Important when using multiple forms on the same page.
+</ParamField>
+
+<ParamField path="showHeader" type="boolean" default="true">
+  Whether to display the "Make a Donation" header above the form.
+</ParamField>
+
+## Examples
+
+### Default Form
+
+From `src/pages/index.astro:5`, `src/pages/giving.astro:3`, and `src/pages/give.astro:7`:
+
+```astro
+---
+import DonationForm from '../components/DonationForm.astro';
+---
+
+<DonationForm />
+```
+
+### Without Header
+
+```astro
+<DonationForm showHeader={false} />
+```
+
+### Multiple Forms on Same Page
+
+```astro
+<!-- General donation -->
+<DonationForm id="general-donation" />
+
+<!-- Building fund -->
+<DonationForm id="building-fund" />
+
+<!-- Missions fund -->
+<DonationForm id="missions" />
+```
+
+## Form Fields
+
+### Gift Type
+
+Radio button selection:
+- **One-Time**: Single donation
+- **Recurring**: Subscription-based giving (default)
+
+### Billing Frequency
+
+Visible only for recurring donations:
+- Weekly
+- Bi-weekly (Every 2 Weeks)
+- Monthly (default)
+- Annually
+
+### Donation Amount
+
+Preset buttons: $25, $50 (default), $100, $250
+Custom input: $5 minimum, $999,999 maximum
+
+### Email Address
+
+Required field for receipt delivery.
+
+### Cover Transaction Fees
+
+Optional checkbox to add 2.9% + $0.30 to donation:
+```
+Fee Calculation: (amount * 0.029) + 0.30
+Example: $50 donation → $1.75 fee → $51.75 total
+```
+
+## Fee Calculation
+
+The component calculates processing fees in real-time:
+
+```javascript
+function calculateFee(amount: number): number {
+  return Math.round((amount * 0.029 + 0.30) * 100) / 100;
+}
+```
+
+**Example Calculations:**
+- $25 donation: $1.03 fee
+- $50 donation: $1.75 fee
+- $100 donation: $3.20 fee
+- $250 donation: $7.55 fee
+
+## Dynamic Disclaimer
+
+The legal disclaimer updates based on selections:
+
+### One-Time Donation
+
+```
+By clicking "Complete Donation", you authorize Lake Ozark Christian Church Inc. 
+to charge your payment method $50.00.
+```
+
+### Recurring Donation
+
+```
+By clicking "Complete Donation", you authorize Lake Ozark Christian Church Inc. 
+to charge your payment method $50.00 every month until cancelled. 
+Manage or cancel at donork.it/locc.
+```
+
+## API Integration
+
+Submits to DonorKit API:
+
+```javascript
+const response = await fetch('https://api.locc.us/api/v2/donation', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    amount: 50,
+    email: 'donor@example.com',
+    donationType: 'recurring',
+    frequency: 'monthly',
+    coverFees: true
+  })
+});
+```
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "url": "https://checkout.donorkit.io/session/xyz123"
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "message": "Invalid amount"
+}
+```
+
+## Form Validation
+
+Client-side validation before submission:
+
+```javascript
+// Minimum amount
+if (!amount || amount < 5) {
+  showToast('Please enter an amount of at least $5', 'warning', 3000);
+  return;
+}
+
+// Maximum amount
+if (amount > 999999) {
+  showToast('Amount cannot exceed $999,999', 'warning', 3000);
+  return;
+}
+
+// Email validation
+if (!email || !email.includes('@')) {
+  showToast('Please enter a valid email address', 'warning', 3000);
+  return;
+}
+```
+
+## Toast Notifications
+
+Integrates with global toast system:
+
+```javascript
+// Info toast (indefinite)
+const loadingToastId = showToast('Processing your donation...', 'info', 0);
+
+// Success toast (2 seconds)
+showToast('Redirecting to payment...', 'success', 2000);
+
+// Error toast (5 seconds)
+showToast('There was an error. Please try again.', 'error', 5000);
+
+// Remove specific toast
+removeToast(loadingToastId);
+```
+
+## Payment Flow
+
+1. User fills out form
+2. User clicks "Complete Donation"
+3. Client-side validation runs
+4. Loading state activates
+5. API request sent to DonorKit
+6. Redirect URL received
+7. User redirected to secure checkout
+8. Payment processed by DonorKit
+9. Receipt emailed to user
+
+## Subscription Management
+
+Recurring donors can manage their subscriptions at:
+```
+https://donork.it/locc
+```
+
+Provided in:
+- Disclaimer text
+- Security note footer
+- Email receipts
+
+## Styling
+
+The form uses a clean, accessible design:
+
+### Container
+```astro
+<div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+```
+
+### Custom Checkbox
+Fully custom checkbox design for fee coverage:
+```css
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.cover-fees:checked + .custom-checkbox {
+  background-color: #8B5A2B; /* Brand color */
+  border-color: #8B5A2B;
+}
+```
+
+### Amount Buttons
+```css
+.amount-btn.selected {
+  border-color: #8B5A2B;
+  background-color: rgba(139, 90, 43, 0.05);
+  color: #8B5A2B;
+}
+```
+
+## Accessibility
+
+- Keyboard navigation support
+- ARIA labels for screen readers
+- Focus indicators
+- Semantic HTML structure
+- Clear error messages
+- Descriptive button text
+
+## Security Features
+
+- HTTPS API endpoint
+- Secure checkout redirect
+- No card data stored locally
+- PCI-compliant payment processor (DonorKit)
+- Email verification
+
+## Customization
+
+### Change Preset Amounts
+
+```astro
+<button type="button" class="amount-btn" data-amount="10">$10</button>
+<button type="button" class="amount-btn" data-amount="20">$20</button>
+<button type="button" class="amount-btn" data-amount="50">$50</button>
+<button type="button" class="amount-btn" data-amount="100">$100</button>
+```
+
+### Modify Fee Structure
+
+Update fee calculation if processing fees change:
+
+```javascript
+function calculateFee(amount: number): number {
+  return Math.round((amount * 0.035 + 0.50) * 100) / 100; // New rates
+}
+```
+
+### Change Default Selection
+
+```astro
+<!-- Default to one-time instead of recurring -->
+<input type="radio" name="donationType" value="one-time" checked />
+<input type="radio" name="donationType" value="recurring" />
+
+<!-- Change default amount -->
+<input type="number" name="amount" value="100" />
+
+<!-- Change default frequency -->
+<select name="frequency">
+  <option value="weekly" selected>Weekly</option>
+</select>
+```
+
+## Testing
+
+### Test Mode
+
+Use test API endpoint:
+
+```javascript
+const response = await fetch('https://api-test.locc.us/api/v2/donation', {
+  // ...
+});
+```
+
+### Console Testing
+
+```javascript
+// Trigger form submission
+document.getElementById('donation-form').dispatchEvent(new Event('submit'));
+
+// Check form data
+const formData = new FormData(document.getElementById('donation-form'));
+for (let [key, value] of formData.entries()) {
+  console.log(key, value);
+}
+```
+
+## Error Handling
+
+```javascript
+try {
+  const response = await fetch(...);
+  const data = await response.json();
+  
+  if (data.success && data.url) {
+    // Success
+  } else {
+    throw new Error(data.message || 'Failed to create donation session');
+  }
+} catch (error) {
+  console.error('Donation error:', error);
+  showToast('There was an error. Please try again.', 'error', 5000);
+  // Reset form state
+}
+```
+
+## Related Components
+
+Used on these pages:
+- **Home Page** (`/`): Main donation CTA
+- **Giving Page** (`/giving`): Dedicated giving information
+- **Give Page** (`/give`): Quick donation page

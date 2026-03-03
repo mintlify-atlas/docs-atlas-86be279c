@@ -1,80 +1,290 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quickstart
+description: Get the Lake Ozark Christian Church website running locally in minutes
 ---
 
-## Get started in three steps
+# Quickstart
 
-Get your documentation site running locally and make your first customization.
+This guide will help you set up the Lake Ozark Christian Church website on your local development environment and make your first changes.
 
-### Step 1: Set up your local environment
+## Prerequisites
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+Before you begin, ensure you have the following installed:
+
+- **Node.js** 18 or higher (check with `node --version`)
+- **npm** or **bun** package manager
+- **Git** for cloning the repository
+- A code editor (VS Code recommended)
+
+<Note>
+  This project uses Astro 5 with server-side rendering. Some features like location detection and API routes require the dev server to be running.
+</Note>
+
+## Installation
+
+Follow these steps to get the site running locally:
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the Lake Ozark Christian Church repository to your local machine:
+
+    ```bash
+    git clone <repository-url>
+    cd lake-ozark-christian-church
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all required dependencies using npm or bun:
+
+    <CodeGroup>
+    ```bash npm
+    npm install
+    ```
+
+    ```bash bun
+    bun install
+    ```
+    </CodeGroup>
+
+    This will install all dependencies listed in `package.json`, including:
+    - Astro 5.16.4
+    - React 18.3.1
+    - Tailwind CSS 3.4.17
+    - Vercel adapter
+    - YouTube integration
+    - Sentry monitoring
+  </Step>
+
+  <Step title="Start the development server">
+    Run the development server:
+
+    <CodeGroup>
+    ```bash npm
+    npm run dev
+    ```
+
+    ```bash alternative
+    npm start
+    ```
+    </CodeGroup>
+
+    The server will start at `http://localhost:4321`
+  </Step>
+
+  <Step title="Open in your browser">
+    Navigate to [http://localhost:4321](http://localhost:4321) to see the site running locally.
+
+    You should see the Lake Ozark Christian Church homepage with all components loaded.
+  </Step>
+</Steps>
+
+<Warning>
+  Location-based features may behave differently in development. The site checks if visitors are local to the Lake Ozark area and adjusts content accordingly.
+</Warning>
+
+## Available commands
+
+Here are all the npm commands available in this project:
+
+| Command | Action |
+| :--- | :--- |
+| `npm run dev` | Starts local dev server at `localhost:4321` |
+| `npm start` | Alternative command to start dev server |
+| `npm run build` | Builds the production site to `./dist/` |
+| `npm run preview` | Preview the built site locally before deploying |
+| `npm run astro` | Run Astro CLI commands (add, check, etc.) |
+| `npm run astro -- --help` | Get help with the Astro CLI |
+
+## Making your first change
+
+Let's make a simple change to verify everything is working:
+
+<Steps>
+  <Step title="Open the homepage">
+    Open `src/pages/index.astro` in your code editor. This is the main homepage file.
+  </Step>
+
+  <Step title="Find the welcome section">
+    Look for the welcome section in the file. You'll see Astro component syntax with frontmatter at the top and HTML-like template code below.
+  </Step>
+
+  <Step title="Make a change">
+    Try modifying some text in the page. For example, change a heading or paragraph text.
+
+    ```astro src/pages/index.astro
+    ---
+    import Layout from '../layouts/Layout.astro';
+    // ... other imports
+    ---
+    <Layout title="Home">
+      <h1>Welcome to Lake Ozark Christian Church!</h1>
+      <!-- Your changes here -->
+    </Layout>
+    ```
+  </Step>
+
+  <Step title="See the changes">
+    Save the file and check your browser. Astro has hot module reloading, so changes should appear automatically.
+  </Step>
+</Steps>
+
+## Creating a new page
+
+Astro uses file-based routing. Creating a new page is as simple as adding a new file to `src/pages/`:
+
+<CodeGroup>
+```astro src/pages/example.astro
+---
+import Layout from '../layouts/Layout.astro';
+
+// This is the frontmatter - TypeScript/JavaScript code runs on the server
+const pageTitle = "Example Page";
+const pageDescription = "This is an example page for demonstration";
+---
+
+<Layout title={pageTitle} description={pageDescription}>
+  <div class="container mx-auto px-6 py-12">
+    <h1 class="text-4xl font-light mb-6 text-gray-900">
+      {pageTitle}
+    </h1>
+    <p class="text-lg text-gray-600">
+      This is an example page created in the Lake Ozark Christian Church website.
+    </p>
+  </div>
+</Layout>
+```
+</CodeGroup>
+
+Save this file and navigate to `http://localhost:4321/example` to see your new page.
+
+## Using a component
+
+Let's add an existing component to your new page:
+
+<CodeGroup>
+```astro src/pages/example.astro
+---
+import Layout from '../layouts/Layout.astro';
+import PrayerRequestForm from '../components/PrayerRequestForm.astro';
+
+const pageTitle = "Example Page";
+---
+
+<Layout title={pageTitle}>
+  <div class="container mx-auto px-6 py-12">
+    <h1 class="text-4xl font-light mb-6 text-gray-900">
+      {pageTitle}
+    </h1>
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    <!-- Include the Prayer Request Form component -->
+    <PrayerRequestForm />
+  </div>
+</Layout>
+```
+</CodeGroup>
 
-### Step 2: Deploy your changes
+The `PrayerRequestForm` component is now embedded in your page with all its functionality.
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+## Project structure overview
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+Here's a quick overview of the main directories:
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+```
+lake-ozark-christian-church/
+├── src/
+│   ├── pages/          # File-based routing - each file becomes a page
+│   ├── components/     # Reusable Astro and React components
+│   ├── layouts/        # Page layout templates
+│   ├── utils/          # Utility functions and helpers
+│   ├── ui/             # UI components (Header, Footer)
+│   └── blogs/          # Markdown blog posts
+├── public/             # Static assets (images, fonts, etc.)
+├── astro.config.mjs    # Astro configuration
+├── tailwind.config.mjs # Tailwind CSS configuration
+└── package.json        # Dependencies and scripts
+```
 
-### Step 3: Go live
+<Note>
+  For a detailed explanation of the project structure, see the [Project structure](/project-structure) documentation.
+</Note>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+## Building for production
+
+When you're ready to build for production:
+
+```bash
+npm run build
+```
+
+This creates an optimized production build in the `./dist/` directory. You can preview the production build locally with:
+
+```bash
+npm run preview
+```
+
+## Deployment
+
+This project is configured for deployment on Vercel using the `@astrojs/vercel` adapter:
+
+<CodeGroup>
+```javascript astro.config.mjs
+import { defineConfig } from 'astro/config';
+import vercel from '@astrojs/vercel/serverless';
+
+export default defineConfig({
+  output: 'server',
+  adapter: vercel()
+});
+```
+</CodeGroup>
+
+The `output: 'server'` setting enables server-side rendering for API routes and dynamic features.
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
+Now that you have the site running locally:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Project structure" icon="folder-tree" href="/project-structure">
+    Learn about the codebase organization and directory structure
+  </Card>
+  <Card title="Components" icon="puzzle-piece" href="/components/overview">
+    Explore the available components and how to use them
+  </Card>
+  <Card title="Pages" icon="file" href="/pages/overview">
+    Understand routing and page creation in detail
+  </Card>
+  <Card title="Styling" icon="paintbrush" href="/styling/overview">
+    Learn about Tailwind CSS and the custom theme
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+## Troubleshooting
+
+**Port 4321 is already in use**
+
+If you see an error about port 4321 being in use, you can specify a different port:
+
+```bash
+npm run dev -- --port 3000
+```
+
+**Dependencies fail to install**
+
+Make sure you're using Node.js 18 or higher:
+
+```bash
+node --version
+```
+
+Clear the node_modules and try again:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**Changes not appearing**
+
+Hard refresh your browser (Ctrl+Shift+R or Cmd+Shift+R) to clear cached assets.

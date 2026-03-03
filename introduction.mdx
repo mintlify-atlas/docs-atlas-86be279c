@@ -1,0 +1,177 @@
+---
+title: Introduction
+description: Welcome to the Lake Ozark Christian Church website documentation - a comprehensive guide to the church's Astro-powered web platform
+---
+
+# Welcome to Lake Ozark Christian Church
+
+This documentation covers the Lake Ozark Christian Church website, a modern web platform built with Astro, React, and Tailwind CSS. The site serves the Lake Ozark Christian Church community in Lake Ozark, Missouri, providing worship information, community engagement tools, and digital ministry resources.
+
+<Note>
+  This project was built by [@InactiveBen](https://benji.services) and is deployed on Vercel. Visit the live site at [lakeozarkdisciples.org](https://lakeozarkdisciples.org).
+</Note>
+
+## What is this project?
+
+The Lake Ozark Christian Church website is a server-side rendered (SSR) web application that combines the performance of Astro with the interactivity of React components. It's designed to serve both local and remote visitors with location-aware features, liturgical calendar integration, and comprehensive accessibility support.
+
+## Key features
+
+This platform includes a rich set of features tailored for church ministry and community engagement:
+
+<CardGroup cols={2}>
+  <Card title="Get started" icon="rocket" href="/quickstart">
+    Set up your development environment and run the site locally in minutes
+  </Card>
+  <Card title="Components" icon="puzzle-piece" href="/components/overview">
+    Explore reusable React and Astro components for forms, banners, calendars, and more
+  </Card>
+  <Card title="Pages" icon="file" href="/pages/home">
+    Learn about the page structure, routing system, and content organization
+  </Card>
+  <Card title="API reference" icon="code" href="/api/thumbnail-proxy">
+    Discover the API endpoints for videos, thumbnails, and dynamic content
+  </Card>
+</CardGroup>
+
+### Core capabilities
+
+**Server-side rendering with Astro**
+- Hybrid rendering with static and dynamic pages
+- SSR for location-based features and API routes
+- Optimized performance with minimal JavaScript
+- SEO-friendly with comprehensive meta tags and structured data
+
+**React components**
+- Interactive forms (prayer requests, donations)
+- Location-aware content delivery
+- Accessibility menu with customization options
+- Animated marquee testimonials
+- Seasonal banners based on liturgical calendar
+
+**Location-based content**
+- Automatic visitor location detection
+- Customized content for local vs. remote visitors
+- Privacy-first location permissions
+- Geolocation-aware service information
+
+**YouTube integration**
+- Automated video fetching from church YouTube channel
+- Custom thumbnail generation and proxy
+- Video gallery with search and filtering
+- Embedded live stream functionality
+
+**Liturgical calendar**
+- Dynamic seasonal colors and themes
+- Holiday countdown functionality
+- Disciples of Christ liturgical calendar support
+- Automatic seasonal banner display
+
+**Forms and engagement**
+- Prayer request submission
+- Online donation processing
+- Report issue functionality
+- Newsletter signup
+
+**Accessibility features**
+- WCAG 2.1 compliance
+- Customizable accessibility menu
+- Font size adjustments
+- High contrast modes
+- Keyboard navigation support
+- Skip to main content links
+
+**Blog system**
+- Markdown-based blog posts
+- Automatic post listing and routing
+- Social sharing capabilities
+- Featured posts on homepage
+
+## Technology stack
+
+The project leverages modern web technologies for optimal performance and developer experience:
+
+<CodeGroup>
+```json package.json
+{
+  "dependencies": {
+    "astro": "^5.16.4",
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/tailwind": "^5.1.5",
+    "@astrojs/vercel": "^8.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.17",
+    "youtube-sr": "^4.3.12",
+    "@joycostudio/marquee": "^0.0.13",
+    "@sentry/astro": "^9.46.0"
+  }
+}
+```
+
+```javascript astro.config.mjs
+import { defineConfig } from 'astro/config';
+import tailwind from '@astrojs/tailwind';
+import react from '@astrojs/react';
+import vercel from '@astrojs/vercel/serverless';
+
+export default defineConfig({
+  integrations: [
+    tailwind(),
+    react()
+  ],
+  output: 'server',
+  adapter: vercel()
+});
+```
+</CodeGroup>
+
+**Frontend framework**: Astro 5 with server-side rendering  
+**UI library**: React 18 for interactive components  
+**Styling**: Tailwind CSS with custom brand colors  
+**Deployment**: Vercel serverless functions  
+**Monitoring**: Sentry for error tracking  
+**Fonts**: Google Fonts (Albert Sans, Inter, Gochi Hand)
+
+## Project goals
+
+This website is designed with several key objectives:
+
+1. **Ministry accessibility** - Make church information and resources easily accessible to both local community members and online visitors
+2. **Performance** - Deliver fast page loads and smooth interactions through SSR and optimized assets
+3. **Engagement** - Provide interactive tools for prayer requests, donations, and community connection
+4. **Accessibility** - Ensure all visitors can access content regardless of ability or device
+5. **Maintainability** - Use modern tools and clear architecture for easy updates and enhancements
+
+<Warning>
+  This is a production website serving an active church community. Always test changes thoroughly in a development environment before deploying.
+</Warning>
+
+## Next steps
+
+Ready to start exploring? Here's where to go next:
+
+<Steps>
+  <Step title="Set up your development environment">
+    Follow the [Quickstart guide](/quickstart) to clone the repository and run the site locally
+  </Step>
+  <Step title="Understand the project structure">
+    Review the [Project structure](/project-structure) documentation to learn how the codebase is organized
+  </Step>
+  <Step title="Explore components">
+    Check out the [Components overview](/components/overview) to see available UI components
+  </Step>
+  <Step title="Learn about pages and routing">
+    Read the [Pages documentation](/pages/home) to understand how routing works in this Astro project
+  </Step>
+</Steps>
+
+## Support and contribution
+
+For issues, questions, or feedback:
+
+- **Report issues**: Visit [lakeozarkdisciples.org/report](https://lakeozarkdisciples.org/report)
+- **Live site**: [lakeozarkdisciples.org](https://lakeozarkdisciples.org)
+- **CDN**: [cdn.lakeozarkdisciples.org](https://cdn.lakeozarkdisciples.org)
+
+This documentation will help you understand, maintain, and enhance the Lake Ozark Christian Church website platform.

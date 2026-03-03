@@ -1,0 +1,400 @@
+---
+title: WeatherBanner Component
+description: Emergency service cancellation modal for weather-related closures with auto-expiration
+---
+
+The `WeatherBanner` component displays urgent weather-related service cancellation alerts in a modal dialog format. It's designed for temporary emergency announcements that expire automatically.
+
+## Features
+
+- **Modal Dialog**: Full-screen overlay with centered alert
+- **Auto-Expiration**: Automatically hides after specified date
+- **Session Dismissal**: Remembers dismissal via sessionStorage
+- **Keyboard Support**: Escape key closes the modal
+- **Backdrop Dismissal**: Click outside to close
+- **Urgent Styling**: Red accent for emergency visibility
+
+## Installation
+
+```astro
+import WeatherBanner from '../components/WeatherBanner.astro';
+```
+
+## Basic Usage
+
+```astro
+<WeatherBanner />
+```
+
+## Props
+
+<ParamField path="messageId" type="string" default="cancel-jan-25-2026">
+  Unique identifier for tracking dismissals. Use a meaningful ID that includes the date.
+</ParamField>
+
+<ParamField path="expiresAt" type="string" default="2026-01-28T23:59:59">
+  ISO 8601 date string indicating when the alert should stop showing.
+  Format: `YYYY-MM-DDTHH:MM:SS`
+</ParamField>
+
+## Current Active Example
+
+From the source code (lines 1-15):
+
+```astro
+<WeatherBanner 
+  messageId="cancel-jan-25-2026"
+  expiresAt="2026-01-28T23:59:59"
+/>
+```
+
+**Displays:**
+```
+Service Canceled
+Sunday, January 25
+
+Due to inclement weather, our in-person worship service has been 
+canceled for this Sunday. Please stay safe and we look forward to 
+seeing you next week.
+
+[Got it]
+```
+
+## Message Customization
+
+To customize the message, edit the component HTML:
+
+```astro
+<h2 id={`weatherTitle-${messageId}`}>
+  Sunday, January 25  <!-- Change date here -->
+</h2>
+<p>
+  Due to inclement weather, our in-person worship service has been 
+  <strong>canceled</strong> for this Sunday. Please stay safe and 
+  we look forward to seeing you next week.
+  <!-- Customize message here -->
+</p>
+```
+
+## Examples
+
+### Different Date
+
+```astro
+<WeatherBanner 
+  messageId="cancel-feb-15-2026"
+  expiresAt="2026-02-18T23:59:59"
+/>
+```
+
+Then update the display date in the component:
+```astro
+<h2>Sunday, February 15</h2>
+```
+
+### Shorter Expiration
+
+```astro
+<WeatherBanner 
+  messageId="cancel-today"
+  expiresAt="2026-03-03T18:00:00"  <!-- Expires at 6 PM same day -->
+/>
+```
+
+### Delayed Service (Not Canceled)
+
+Modify the message content:
+
+```astro
+<p class="text-xs font-semibold text-yellow-600 uppercase tracking-wider mb-2">
+  Service Delayed
+</p>
+<h2>Sunday, January 25</h2>
+<p>
+  Due to inclement weather, our worship service will start at 
+  <strong>11:00 AM</strong> instead of the usual time. 
+  Please drive safely!
+</p>
+```
+
+## Behavior
+
+### Expiration Check
+
+Two-level expiration checking:
+
+**Server-side (Astro):**
+```astro
+---
+const expirationDate = new Date(expiresAt);
+const isExpired = new Date() > expirationDate;
+---
+
+{!isExpired && (
+  <!-- Modal content -->
+)}
+```
+
+**Client-side (JavaScript):**
+```javascript
+if (expirationDate && new Date() > new Date(expirationDate)) {
+  modal?.remove();
+}
+```
+
+### Dismissal Tracking
+
+Uses sessionStorage (per-tab):
+
+```javascript
+function closeModal() {
+  if (messageId) {
+    sessionStorage.setItem(`weather-${messageId}`, 'dismissed');
+  }
+  modal?.remove();
+}
+
+// Check on page load
+if (messageId && sessionStorage.getItem(`weather-${messageId}`) === 'dismissed') {
+  modal?.remove();
+}
+```
+
+**Storage Key Format:**
+- Pattern: `weather-{messageId}`
+- Example: `weather-cancel-jan-25-2026`
+- Value: `"dismissed"`
+
+## Styling
+
+### Emergency Red Accent
+
+```html
+<p class="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">
+  Service Canceled
+</p>
+```
+
+### Modal Overlay
+
+```html
+<div class="fixed inset-0 bg-black/70 z-[150] flex items-center justify-center p-6">
+```
+
+- `z-[150]`: Above most content
+- `bg-black/70`: 70% opacity backdrop
+- Centered with flexbox
+
+### Content Card
+
+```html
+<div class="bg-white rounded-lg max-w-sm w-full p-6 modal-content">
+```
+
+- Max width: 28rem (448px)
+- White background
+- Rounded corners
+- Fade-in animation
+
+### Animation
+
+```css
+.modal-content {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+```
+
+Quick 200ms fade-in for immediate visibility.
+
+## Event Handling
+
+### Button Click
+
+```javascript
+closeBtn?.addEventListener('click', closeModal);
+```
+
+### Backdrop Click
+
+```javascript
+modal?.addEventListener('click', (e) => { 
+  if (e.target === modal) closeModal(); 
+});
+```
+
+Only closes if clicking the backdrop, not the card.
+
+### Escape Key
+
+```javascript
+document.addEventListener('keydown', (e) => { 
+  if (e.key === 'Escape') closeModal(); 
+});
+```
+
+## Accessibility
+
+- `role="alertdialog"`: Indicates urgent modal
+- `aria-modal="true"`: Screen reader modal behavior
+- `aria-labelledby`: References title for context
+- High contrast colors (red on white)
+- Keyboard dismissal support
+- Clear, urgent language
+
+## Z-Index Layering
+
+```
+WeatherBanner: z-[150]
+  ↑
+AlertBanner: z-[150]
+  ↑
+Accessibility Menu: z-[140]
+  ↑
+Cookie Banner: z-[9999]
+```
+
+WeatherBanner and AlertBanner share the same z-index since they're mutually exclusive emergency alerts.
+
+## Use Cases
+
+### Weather Cancellations
+
+```astro
+<!-- Snow/ice -->
+<WeatherBanner messageId="snow-cancel-2026-01-25" />
+
+<!-- Severe storms -->
+<WeatherBanner messageId="storm-cancel-2026-03-15" />
+
+<!-- Flooding -->
+<WeatherBanner messageId="flood-cancel-2026-05-10" />
+```
+
+### Building Issues
+
+```astro
+<p class="text-xs font-semibold text-red-600">
+  Facility Closed
+</p>
+<p>
+  Due to a power outage, our building is temporarily closed. 
+  We're working to resolve this issue.
+</p>
+```
+
+### Health Emergencies
+
+```astro
+<p class="text-xs font-semibold text-red-600">
+  Service Format Changed
+</p>
+<p>
+  Out of an abundance of caution, today's service will be 
+  <strong>online only</strong>. Join us via livestream.
+</p>
+```
+
+## Best Practices
+
+### Unique Message IDs
+
+Use descriptive IDs with dates:
+```
+✅ Good: "cancel-jan-25-2026"
+✅ Good: "snow-delay-2026-02-10"
+❌ Bad: "alert1"
+❌ Bad: "weather"
+```
+
+### Expiration Dates
+
+Set expiration a few days after the event:
+```astro
+<!-- Event: Sunday Jan 25 -->
+<!-- Expires: Tuesday Jan 28 -->
+<WeatherBanner 
+  messageId="cancel-jan-25-2026"
+  expiresAt="2026-01-28T23:59:59"  <!-- +3 days -->
+/>
+```
+
+This ensures:
+- Alert doesn't show on next Sunday
+- Gives time for people checking later in the week
+- Automatic cleanup
+
+### Message Tone
+
+```
+✅ Reassuring: "Please stay safe and we look forward to seeing you next week."
+✅ Clear: "Service has been canceled for this Sunday."
+✅ Action-oriented: "Join us online at..."
+❌ Vague: "There might be an issue."
+❌ Alarmist: "URGENT!!! DO NOT COME!!!"
+```
+
+## Testing
+
+### Test Expiration
+
+```astro
+<!-- Set expiration 1 minute in future -->
+<WeatherBanner 
+  expiresAt={new Date(Date.now() + 60000).toISOString()}
+/>
+```
+
+### Test Dismissal
+
+```javascript
+// Console
+sessionStorage.setItem('weather-cancel-jan-25-2026', 'dismissed');
+location.reload();
+```
+
+### Clear Dismissal
+
+```javascript
+// Console
+sessionStorage.removeItem('weather-cancel-jan-25-2026');
+location.reload();
+```
+
+## Comparison with AlertBanner
+
+| Feature | WeatherBanner | AlertBanner |
+|---------|---------------|-------------|
+| Purpose | Emergency cancellations | General announcements |
+| Urgency | High (red accent) | Medium (neutral) |
+| Typical Duration | 1-3 days | 1-4 weeks |
+| Message | Hard-coded | Prop-based |
+| Style | Emergency alert | Standard notice |
+| Common Use | Weather closures | Event promotions |
+
+## Related Components
+
+- **AlertBanner**: General announcements and notices
+- **SeasonalBanner**: Non-modal seasonal messages
+
+## Quick Reference
+
+**Enable Alert:**
+```astro
+<WeatherBanner 
+  messageId="unique-id-with-date"
+  expiresAt="YYYY-MM-DDTHH:MM:SS"
+/>
+```
+
+**Disable Alert:**
+Remove the component or set expiration to past date.
+
+**Update Message:**
+Edit the HTML content in the component file at:
+- Line 28-31: Title and date
+- Line 33-35: Message text

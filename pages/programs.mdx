@@ -1,0 +1,252 @@
+---
+title: Programs page
+description: Overview of church programs and ministries including worship, children's programs, Lunch Bunch, and community outreach
+---
+
+## Overview
+
+The Programs page (`programs.astro`) showcases all church programs and ministries, from Sunday worship to community outreach initiatives. It provides comprehensive information for members and visitors to get involved.
+
+**File location**: `src/pages/programs.astro`
+
+## Page structure
+
+### Hero section
+
+Introduction to church programs:
+
+```astro
+const heroImage = {
+  url: "https://usercontent.donorkit.io/clients/LOCC/8F240771-48E1-4868-9BC6-6AB8256F433F.jpeg",
+  alt: "Church programs and activities"
+};
+```
+
+**Messaging:**
+- "Get involved"
+- "Programs & Ministries"
+- "There's a place for everyone at Lake Ozark Christian Church"
+
+## Major program sections
+
+### Sunday worship
+
+**Details provided:**
+- **Time:** Sundays at 10:30 AM
+- **Duration:** About an hour
+- **Style:** Traditional and contemporary elements
+- **Features:** Music, message, communion
+- **Streaming:** Available on YouTube
+
+```astro
+<div class="space-y-4 mb-8">
+  <div class="flex items-start gap-3">
+    <div class="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+      <svg class="w-4 h-4 text-brand"><!-- Icon --></svg>
+    </div>
+    <div>
+      <p class="font-medium text-gray-900">Sundays at 10:30 AM</p>
+      <p class="text-sm text-gray-500">About an hour · Casual dress welcome</p>
+    </div>
+  </div>
+</div>
+```
+
+### Children & Youth
+
+**Programs offered:**
+
+1. **Children's Church (Ages 4–13)**
+   - Bible lessons, crafts, and activities
+   - During Sunday service
+
+2. **Nursery Care (Ages 0–3)**
+   - Safe environment with trained caregivers
+   - Available during service
+
+3. **After-School Program (K–5th)**
+   - Free program
+   - Wednesdays 3:30–5:30 PM
+   - Transportation provided
+
+**CTAs:**
+- Learn More → `/children-youth`
+- Register for After-School → Google Form link
+
+### Lunch Bunch
+
+**Weekly fellowship program:**
+
+```astro
+<p class="text-sm font-semibold text-brand uppercase tracking-wider mb-4">Weekly Fellowship</p>
+<h2>Lunch Bunch</h2>
+<p>Join us for food and fellowship every week! We visit a different local restaurant 
+each Tuesday. Everyone is welcome — bring a friend!</p>
+```
+
+**Details:**
+- **Time:** Tuesdays at 11:30 AM
+- **Location:** Different restaurant each week
+- **Cost:** Pay for your own meal
+- **Format:** Casual fellowship
+
+**Benefits highlighted:**
+- No commitment required
+- Meet new people
+- Discover local restaurants
+- Open to members and visitors
+
+### Community outreach
+
+**Shelter in a Storm ministry:**
+
+```astro
+<div class="bg-gray-50 border border-gray-200 rounded-lg p-8">
+  <div class="flex items-center gap-4 mb-6">
+    <div class="w-12 h-12 rounded-xl bg-brand/10 flex items-center justify-center">
+      <svg><!-- Heart icon --></svg>
+    </div>
+    <div>
+      <h3>Shelter in a Storm</h3>
+      <p class="text-sm text-gray-500">Community Outreach Ministry</p>
+    </div>
+  </div>
+</div>
+```
+
+**Services provided:**
+- Food assistance
+- Utility support
+- Housing resources
+- Confidential help
+- No church membership required
+
+**External link:**
+```astro
+<a href="https://shelterinastorm.org" target="_blank" rel="noopener noreferrer">
+  Visit shelterinastorm.org
+</a>
+```
+
+## Contact CTA section
+
+**Get involved messaging:**
+
+```astro
+<h2>Ready to Connect?</h2>
+<p>Whether you want to join a program, volunteer, or just learn more, 
+our team is here to help...</p>
+```
+
+**Contact methods:**
+- **Email:** office@lakeozarkdisciples.org
+- **Phone:** (573) 365-3366
+- **Hours:** Monday–Thursday, 9 AM – 1 PM
+
+**Quick links sidebar:**
+- Plan Your Visit
+- Children & Youth
+- Lunch Bunch Schedule
+- Support Our Ministry
+- Watch Online
+
+## Design patterns
+
+### Section layout
+
+Alternating image placement:
+
+```astro
+<!-- Pattern 1: Image on right -->
+<div class="grid lg:grid-cols-2 gap-12 items-start">
+  <div class="lg:py-4">
+    <!-- Content -->
+  </div>
+  <div class="relative">
+    <!-- Image -->
+  </div>
+</div>
+
+<!-- Pattern 2: Image on left -->
+<div class="grid lg:grid-cols-2 gap-12 items-start">
+  <div class="relative order-2 lg:order-1">
+    <!-- Image -->
+  </div>
+  <div class="lg:py-4 order-1 lg:order-2">
+    <!-- Content -->
+  </div>
+</div>
+```
+
+### Feature cards
+
+```astro
+<div class="flex items-start gap-3">
+  <div class="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center flex-shrink-0">
+    <svg class="w-4 h-4 text-brand"><!-- Icon --></svg>
+  </div>
+  <div>
+    <p class="font-medium text-gray-900">Feature Title</p>
+    <p class="text-sm text-gray-500">Feature description</p>
+  </div>
+</div>
+```
+
+### Section badges
+
+```astro
+<p class="text-sm font-semibold text-brand uppercase tracking-wider mb-4">
+  Section Label
+</p>
+```
+
+## Background colors
+
+Alternating backgrounds for visual rhythm:
+- White (`bg-white`)
+- Gray 50 (`bg-gray-50`)
+
+## Scroll behavior
+
+Smooth scrolling to anchored sections:
+
+```css
+section[id] {
+  scroll-margin-top: 2rem;
+}
+```
+
+## Images used
+
+1. **Hero** - After-school program activities
+2. **Sunday worship** - Sanctuary during service
+3. **Children's programs** - Kids activities
+4. **Lunch Bunch** - Illustrated card (no image)
+5. **Community outreach** - Illustrated card (no image)
+
+## UTM tracking
+
+All internal links include tracking:
+
+```astro
+href="/worship?utm_source=lakeozarkdisciples&utm_medium=programs_page&utm_campaign=cta&utm_content=plan_visit"
+```
+
+## Call-to-action summary
+
+**Primary CTAs:**
+- View Programs (hero)
+- Plan Your Visit
+- Watch Online
+- Learn More (children's programs)
+- Register for After-School
+- View Schedule (Lunch Bunch)
+- Request Assistance (outreach)
+- Support This Ministry
+- Contact Us
+
+## Related pages
+
+- [Children & Youth page](/pages/children-youth) - Detailed kids programs
+- [Worship page](/pages/worship) - Service information
+- [Giving page](/pages/giving) - Support ministries

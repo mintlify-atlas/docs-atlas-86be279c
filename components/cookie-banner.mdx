@@ -1,0 +1,327 @@
+---
+title: CookieBanner Component
+description: GDPR/CCPA-compliant cookie consent banner with granular privacy controls and geographic detection
+---
+
+The `CookieBanner` component provides a privacy-compliant cookie consent system with geographic detection, granular permission controls, and Global Privacy Control (GPC) support.
+
+## Features
+
+- **Privacy Compliance**: GDPR, CCPA, CPA, LGPD, and PIPEDA compliant
+- **Geographic Detection**: Only shows banner in regions requiring consent
+- **Global Privacy Control**: Automatically respects GPC browser signals
+- **Granular Controls**: Essential, analytics, and personalization categories
+- **Compact & Expanded Views**: Clean UI with detailed settings panel
+- **Analytics Integration**: Automatically loads/unloads Google Analytics
+- **Settings Persistence**: Saves preferences for 365 days
+
+## Installation
+
+```astro
+import CookieBanner from '../components/CookieBanner.astro';
+```
+
+## Usage
+
+Typically included in the main layout:
+
+```astro title="src/layouts/Layout.astro"
+---
+import CookieBanner from '../components/CookieBanner.astro';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <body>
+    <!-- Page content -->
+    <CookieBanner />
+  </body>
+</html>
+```
+
+## Props
+
+This component does not accept any props. All configuration is internal or environment-based.
+
+## Cookie Categories
+
+<ParamField path="Essential" type="always enabled">
+  Required cookies for basic site functionality. Cannot be disabled.
+  - Session management
+  - Security tokens
+  - Basic preferences
+</ParamField>
+
+<ParamField path="Analytics" type="optional">
+  Anonymous usage data collection via Google Analytics.
+  - Page views and navigation
+  - Anonymous IP addresses
+  - Performance metrics
+  - **GA ID**: `G-T4PD8XC0SC`
+</ParamField>
+
+<ParamField path="Preferences" type="optional">
+  Remembers user settings and preferences.
+  - Accessibility settings
+  - UI preferences
+  - Saved form data
+</ParamField>
+
+## User Interface
+
+### Compact Bar
+
+Initial view shown to users:
+```
+We use cookies to improve your experience. We don't sell your data. [Privacy Policy]
+[Settings] [Decline] [Accept]
+```
+
+### Expanded Settings Panel
+
+Detailed controls accessible via "Settings" button:
+- Individual toggles for each cookie category
+- GPC detection notice (if applicable)
+- Privacy policy link
+- "Decline All", "Save", and "Accept All" buttons
+
+## Geographic Detection
+
+The component uses the geolocation API to determine if consent is required:
+
+```javascript
+const res = await fetch('https://geo.locc.us/where');
+const data = await res.json();
+
+// Checks for privacy law jurisdictions
+const needsConsent = data.gdpr || data.ccpa || data.cpa || 
+                     data.lgpd || data.pipeda || hasGPC();
+```
+
+**Supported Jurisdictions:**
+- **GDPR**: European Union countries
+- **CCPA**: California, USA
+- **CPA**: Colorado Privacy Act
+- **LGPD**: Brazil
+- **PIPEDA**: Canada
+
+**Behavior:**
+- If in a regulated jurisdiction: Shows banner after 1.5 seconds
+- If not regulated: Automatically accepts all cookies
+- If API fails: Shows banner after 2 seconds (fail-safe)
+
+## Global Privacy Control (GPC)
+
+Automatic detection and respect for GPC browser signals:
+
+```javascript
+const hasGPC = () => navigator.globalPrivacyControl === true;
+```
+
+When GPC is detected:
+- Shows green notice in settings panel
+- Defaults to minimal tracking
+- Respects user's privacy preference
+
+## Analytics Integration
+
+The component automatically manages Google Analytics loading:
+
+### Load Analytics
+
+```javascript
+function loadAnalytics() {
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = 'https://analytics.locc.us/ga/gtag/js?id=G-T4PD8XC0SC';
+  document.head.appendChild(script);
+
+  // Configure with privacy settings
+  gtag('config', 'G-T4PD8XC0SC', {
+    'transport_url': 'https://analytics.locc.us/ga/g/collect',
+    'anonymize_ip': true
+  });
+}
+```
+
+### Unload Analytics
+
+```javascript
+function unloadAnalytics() {
+  document.querySelectorAll('script[src*="googletagmanager"]').forEach(s => s.remove());
+  if (window.dataLayer) window.dataLayer = [];
+}
+```
+
+## Cookie Storage
+
+Preferences are stored in a browser cookie:
+
+```javascript
+const date = new Date();
+date.setTime(date.getTime() + 365 * 24 * 60 * 60 * 1000);
+
+document.cookie = `cookie-preferences=${JSON.stringify(prefs)};` +
+                  `expires=${date.toUTCString()};` +
+                  `path=/;` +
+                  `SameSite=Strict`;
+```
+
+**Cookie Details:**
+- Name: `cookie-preferences`
+- Expiration: 365 days
+- Path: `/` (site-wide)
+- SameSite: `Strict`
+- Format: JSON object
+
+**Example Value:**
+```json
+{
+  "essential": true,
+  "analytics": true,
+  "personalization": false
+}
+```
+
+## API Integration
+
+The component integrates with other components:
+
+### AccessibilityMenu Integration
+
+```javascript
+// AccessibilityMenu checks cookie consent before saving
+function canSave(): boolean {
+  const consent = document.cookie.split('; ')
+    .find(row => row.startsWith('cookie-consent='));
+  if (!consent) return false;
+  const value = decodeURIComponent(consent.split('=')[1]);
+  return value === 'all' || value === 'partial';
+}
+```
+
+### Programmatic Access
+
+Show settings from elsewhere in your app:
+
+```javascript
+// Exposed global function
+window.showCookieSettings();
+```
+
+Example link in footer:
+```html
+<a href="#" onclick="window.showCookieSettings(); return false;">
+  Cookie Settings
+</a>
+```
+
+## Keyboard Navigation
+
+- `Tab`: Navigate through controls
+- `Space`/`Enter`: Toggle switches and click buttons
+- `Escape`: Close expanded panel
+
+## Responsive Design
+
+Mobile-specific adjustments:
+
+```css
+@media (max-width: 640px) {
+  .cookie-compact-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .cookie-panel-footer {
+    flex-direction: column;
+  }
+}
+```
+
+## Privacy Commitments
+
+The banner includes privacy statements:
+- "We do not sell or share your personal information"
+- Links to privacy policy
+- Clear category descriptions
+- Opt-in by default (except essential)
+
+## Customization
+
+### Change Analytics ID
+
+Update the Google Analytics ID:
+
+```javascript
+// Line 399
+script.src = 'https://analytics.locc.us/ga/gtag/js?id=YOUR-GA-ID';
+
+// Line 407
+gtag('config', 'YOUR-GA-ID', {
+  'transport_url': 'https://analytics.locc.us/ga/g/collect',
+  'anonymize_ip': true
+});
+```
+
+### Modify Timing
+
+Change when the banner appears:
+
+```javascript
+// Line 451
+if (needsConsent) setTimeout(showBanner, 3000); // 3 seconds instead of 1.5
+```
+
+### Add Cookie Categories
+
+Extend the preferences interface:
+
+```typescript
+interface CookiePreferences {
+  essential: boolean;
+  analytics: boolean;
+  personalization: boolean;
+  marketing: boolean; // New category
+}
+```
+
+Then add the corresponding UI toggle in the HTML.
+
+## Testing
+
+### Test Geographic Detection
+
+Use VPN or modify the API response:
+
+```javascript
+// Mock GDPR region
+const data = { gdpr: true, country: 'DE' };
+```
+
+### Test GPC Detection
+
+Enable GPC in browser settings (Brave, Firefox with extension):
+```
+Brave: Settings → Shields → Global Privacy Control
+```
+
+### Clear Saved Preferences
+
+```javascript
+// Console command
+document.cookie = 'cookie-preferences=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+location.reload();
+```
+
+## Accessibility
+
+- ARIA roles and labels
+- Keyboard navigation
+- Focus management
+- Clear, plain language
+- High contrast toggle styles
+
+## Related Components
+
+- **AccessibilityMenu**: Uses cookie consent to determine if settings can be saved
+- **Layout**: Where CookieBanner is typically included

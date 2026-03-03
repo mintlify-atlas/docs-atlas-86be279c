@@ -1,0 +1,555 @@
+---
+title: Project structure
+description: Detailed guide to the Lake Ozark Christian Church website codebase organization and architecture
+---
+
+# Project structure
+
+The Lake Ozark Christian Church website follows a clear, organized structure that leverages Astro's file-based routing and component architecture. This guide explains how the codebase is organized and the purpose of each directory.
+
+## Directory overview
+
+Here's the complete project structure:
+
+```
+lake-ozark-christian-church/
+├── .codesandbox/        # CodeSandbox configuration
+├── .git/                # Git version control
+├── .vscode/             # VS Code workspace settings
+├── public/              # Static assets served as-is
+│   ├── favicon.ico
+│   ├── favicon.svg
+│   ├── LOCC-header.png
+│   └── cards like.json
+├── src/                 # Source code
+│   ├── blogs/          # Markdown blog posts
+│   ├── components/     # Reusable Astro and React components
+│   ├── layouts/        # Page layout templates
+│   ├── pages/          # File-based routing (pages and API routes)
+│   ├── ui/             # UI framework components (Header, Footer)
+│   ├── utils/          # Utility functions and helpers
+│   └── env.d.ts        # TypeScript environment definitions
+├── astro.config.mjs    # Astro configuration
+├── tailwind.config.mjs # Tailwind CSS configuration
+├── tsconfig.json       # TypeScript configuration
+├── package.json        # Dependencies and scripts
+└── README.md           # Project documentation
+```
+
+## Core directories
+
+### `src/pages/` - Routing and pages
+
+The `src/pages/` directory is the heart of the routing system. Each file automatically becomes a route on the website.
+
+```
+src/pages/
+├── index.astro           # Homepage (/) 
+├── about.astro           # About page (/about)
+├── worship.astro         # Worship page (/worship)
+├── staff.astro           # Staff page (/staff)
+├── live.astro            # Live stream page (/live)
+├── videos.astro          # Video gallery (/videos)
+├── giving.astro          # Giving page (/giving)
+├── programs.astro        # Programs page (/programs)
+├── children-youth.astro  # Children & Youth (/children-youth)
+├── weddings.astro        # Weddings page (/weddings)
+├── lunch-bunch.astro     # Lunch Bunch page (/lunch-bunch)
+├── chimes.astro          # Chimes newsletter (/chimes)
+├── 404.astro             # Not found page
+├── 503.astro             # Service unavailable page
+├── report.astro          # Report issue page (/report)
+├── privacy.astro         # Privacy policy (/privacy)
+├── terms.astro           # Terms of service (/terms)
+├── admin/
+│   └── thumbnail-generator.astro  # Admin tool (/admin/thumbnail-generator)
+├── api/
+│   ├── videos.json.ts    # API endpoint for video data
+│   └── thumbnail-proxy.ts # Thumbnail proxy endpoint
+├── blog/
+│   ├── index.astro       # Blog listing (/blog)
+│   └── [ID].astro        # Individual blog posts (/blog/1, /blog/2, etc.)
+├── donate/
+│   └── index.astro       # Donation page (/donate)
+├── internal/
+│   └── ...               # Internal pages
+├── legal/
+│   └── ...               # Legal pages
+└── wp-admin/
+    └── ...               # WordPress admin redirects
+```
+
+<Note>
+  Files in `src/pages/` can be `.astro`, `.md`, or `.ts` (for API routes). Dynamic routes use bracket notation like `[ID].astro`.
+</Note>
+
+**Key features**:
+- **File-based routing**: `about.astro` → `/about`
+- **Dynamic routes**: `[ID].astro` uses route parameters
+- **API routes**: `.ts` files export request handlers
+- **Server-side rendering**: Pages can use SSR with `export const prerender = false`
+
+**Example from index.astro**:
+
+```astro src/pages/index.astro
+---
+import Layout from '../layouts/Layout.astro';
+import PrayerRequestForm from '../components/PrayerRequestForm.astro';
+import SalvationMarquee from '../components/SalvationMarquee';
+import { isLocalVisitor } from '../utils/locationCheck';
+
+// Enable server-side rendering for location checking
+export const prerender = false;
+
+// Check if visitor is local to Lake Ozark area
+let isLocal = false;
+try {
+  isLocal = await isLocalVisitor();
+} catch (error) {
+  console.warn('Location check failed, defaulting to non-local:', error);
+  isLocal = false;
+}
+---
+
+<Layout title="Home">
+  <!-- Page content -->
+</Layout>
+```
+
+### `src/components/` - Reusable components
+
+The components directory contains reusable Astro and React components used throughout the site:
+
+```
+src/components/
+├── AccessibilityMenu.astro   # Accessibility customization menu
+├── AlertBanner.astro         # Site-wide alert/announcement banner
+├── AlertSmall.astro          # Small inline alerts
+├── CookieBanner.astro        # Cookie consent banner
+├── DonationForm.astro        # Donation form with payment integration
+├── ExternalLinkWarning.astro # Warning modal for external links
+├── LocationMap.astro         # Interactive map component
+├── LocationPermission.astro  # Location permission request
+├── PrayerRequestForm.astro   # Prayer request submission form
+├── PrivacyBanner.astro       # Privacy policy banner
+├── SalvationMarquee.tsx      # React component - testimonial marquee
+├── SeasonalBanner.astro      # Liturgical calendar-based banner
+├── SelfXSS.astro            # Console warning against self-XSS
+├── SharePost.astro          # Social sharing buttons
+├── SundayCalendar.astro     # Sunday service calendar
+└── WeatherBanner.astro      # Weather alert banner
+```
+
+<Note>
+  Components with `.tsx` extension are React components. All others are Astro components.
+</Note>
+
+**Example React component** (`SalvationMarquee.tsx`):
+
+```tsx src/components/SalvationMarquee.tsx
+import { useState } from 'react';
+import { Marquee } from '@joycostudio/marquee/react';
+
+interface Testimony {
+  name: string;
+  quote: string;
+  year?: string;
+}
+
+interface Props {
+  testimonies?: Testimony[];
+}
+
+export default function SalvationMarquee({ testimonies = defaultTestimonies }: Props) {
+  const [isPaused, setIsPaused] = useState(false);
+  
+  return (
+    <div className="salvation-marquee-wrapper">
+      <Marquee speed={30} direction={-1} play={!isPaused}>
+        {/* Testimony cards */}
+      </Marquee>
+    </div>
+  );
+}
+```
+
+**Example Astro component** usage:
+
+```astro
+---
+import PrayerRequestForm from '../components/PrayerRequestForm.astro';
+---
+
+<div class="container mx-auto px-6 py-12">
+  <h2>Submit a Prayer Request</h2>
+  <PrayerRequestForm />
+</div>
+```
+
+### `src/layouts/` - Page templates
+
+Layouts provide consistent structure and styling across pages:
+
+```
+src/layouts/
+├── Layout.astro       # Primary layout for all standard pages
+├── LegalLayout.astro  # Layout for legal pages (privacy, terms)
+└── LiveLayout.astro   # Layout for live stream page
+```
+
+**The main Layout component** (`Layout.astro`):
+
+```astro src/layouts/Layout.astro
+---
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  type?: 'website' | 'article' | 'profile';
+}
+
+const { 
+  title,
+  description = "Lake Ozark Christian Church - A welcoming Christian community...",
+  ogImage,
+  type = 'website'
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Lake Ozark Christian Church</title>
+    <meta name="description" content={description} />
+    <!-- SEO, Open Graph, Schema.org, etc. -->
+  </head>
+  <body>
+    <Header />
+    <SeasonalBanner />
+    <main id="main-content">
+      <slot />
+    </main>
+    <Footer />
+    <PrivacyBanner />
+    <LocationPermission />
+  </body>
+</html>
+```
+
+**Key features**:
+- SEO optimization with meta tags and structured data
+- Open Graph and Twitter Card support
+- Accessibility features (skip links, ARIA labels)
+- Sentry error tracking integration
+- Consistent header and footer across all pages
+
+### `src/utils/` - Utility functions
+
+Utility functions provide reusable logic for common tasks:
+
+```
+src/utils/
+├── liturgicalCalendar.ts     # Liturgical season calculations
+├── fetchYouTubeVideos.js     # YouTube API integration
+├── locationCheck.ts          # Visitor location detection (TypeScript)
+├── locationCheck.js          # Location detection (JavaScript version)
+└── clientThumbnailGenerator.js # Client-side thumbnail generation
+```
+
+**Example: Liturgical Calendar** (`liturgicalCalendar.ts`):
+
+```typescript src/utils/liturgicalCalendar.ts
+export interface LiturgicalSeason {
+  season: string;
+  color: string;
+  message?: string;
+  icon?: string;
+  countdown?: {
+    days: number;
+    holiday: string;
+  };
+}
+
+/**
+ * Determine liturgical season and color for a given date
+ * Based on Disciples of Christ liturgical calendar
+ */
+export function getLiturgicalSeason(date: Date): LiturgicalSeason {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  
+  // Check for specific holidays
+  if (month === 12 && day === 25) {
+    return {
+      season: 'Christmas',
+      color: '#ffffff',
+      message: 'Have a merry Christmas from your LOCC family!',
+      icon: '🎄'
+    };
+  }
+  
+  // Additional season logic...
+}
+```
+
+**Usage in components**:
+
+```astro src/components/SeasonalBanner.astro
+---
+import { getLiturgicalSeason } from '../utils/liturgicalCalendar';
+
+const today = new Date();
+const season = getLiturgicalSeason(today);
+---
+
+<div style={`background-color: ${season.color}`}>
+  <p>{season.message}</p>
+</div>
+```
+
+### `src/ui/` - UI framework components
+
+Core UI components that form the site's navigation and structure:
+
+```
+src/ui/
+├── Header.astro   # Site header with navigation
+└── Footer.astro   # Site footer with links and info
+```
+
+These components are included in the main `Layout.astro` and appear on every page.
+
+### `src/blogs/` - Blog content
+
+Markdown files for blog posts:
+
+```
+src/blogs/
+├── 1.md   # First blog post
+├── 2.md   # Second blog post
+├── 3.md   # Third blog post
+└── 4.md   # Fourth blog post
+```
+
+**Blog post structure**:
+
+```markdown src/blogs/1.md
+---
+id: 1
+title: "Welcome to Our New Website"
+date: "2024-01-15"
+author: "Church Staff"
+excerpt: "We're excited to announce the launch of our new website..."
+---
+
+Content of the blog post goes here...
+```
+
+**Dynamic routing** (`src/pages/blog/[ID].astro`):
+
+```astro src/pages/blog/[ID].astro
+---
+export async function getStaticPaths() {
+  const posts = await Astro.glob('../blogs/*.md');
+  
+  return posts.map(post => ({
+    params: { ID: post.frontmatter.id },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post;
+---
+
+<Layout title={post.frontmatter.title}>
+  <article>
+    <h1>{post.frontmatter.title}</h1>
+    <Content />
+  </article>
+</Layout>
+```
+
+### `public/` - Static assets
+
+Static files served directly without processing:
+
+```
+public/
+├── favicon.ico          # Browser favicon
+├── favicon.svg          # SVG favicon
+├── LOCC-header.png      # Header logo image
+└── cards like.json      # JSON data file
+```
+
+<Warning>
+  Files in `public/` are served at the root path. `public/favicon.ico` becomes `/favicon.ico` in production.
+</Warning>
+
+## Configuration files
+
+### `astro.config.mjs`
+
+Main Astro configuration:
+
+```javascript astro.config.mjs
+import { defineConfig } from 'astro/config';
+import tailwind from '@astrojs/tailwind';
+import react from '@astrojs/react';
+import vercel from '@astrojs/vercel/serverless';
+
+export default defineConfig({
+  // Enable Tailwind CSS and React
+  integrations: [
+    tailwind(),
+    react()
+  ],
+  
+  // Use server-side rendering
+  output: 'server',
+  
+  // Deploy to Vercel serverless
+  adapter: vercel(),
+  
+  // Markdown configuration
+  markdown: {
+    shikiConfig: {
+      theme: 'github-light'
+    }
+  }
+});
+```
+
+### `tailwind.config.mjs`
+
+Tailwind CSS customization:
+
+```javascript tailwind.config.mjs
+export default {
+  content: [
+    './src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}',
+  ],
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        brand: {
+          DEFAULT: '#9e1e3e',  // Main brand color
+          light: '#b84660',    // Light shade
+          dark: '#841834',     // Dark shade
+        }
+      }
+    },
+  },
+  plugins: [],
+}
+```
+
+**Usage in components**:
+
+```astro
+<button class="bg-brand hover:bg-brand-dark text-white px-6 py-3 rounded">
+  Click Me
+</button>
+```
+
+### `package.json`
+
+Project dependencies and scripts:
+
+```json package.json
+{
+  "name": "lake-ozark-christian-church",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^5.16.4",
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/tailwind": "^5.1.5",
+    "@astrojs/vercel": "^8.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.17",
+    "youtube-sr": "^4.3.12",
+    "@joycostudio/marquee": "^0.0.13",
+    "@sentry/astro": "^9.46.0"
+  }
+}
+```
+
+## Architecture patterns
+
+### Server-side rendering
+
+Pages can opt into SSR for dynamic functionality:
+
+```astro src/pages/example.astro
+---
+// Disable prerendering to enable SSR
+export const prerender = false;
+
+// This code runs on each request
+const userIP = Astro.request.headers.get('x-forwarded-for');
+---
+
+<p>Your IP: {userIP}</p>
+```
+
+### Hybrid rendering
+
+Mix static and dynamic pages:
+
+- Static pages (default): Pre-rendered at build time
+- Dynamic pages: Rendered on-demand with SSR
+- API routes: Always server-side
+
+### Component composition
+
+Components are composed to build complex UIs:
+
+```astro
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../ui/Header.astro';
+import PrayerRequestForm from '../components/PrayerRequestForm.astro';
+import Footer from '../ui/Footer.astro';
+---
+
+<Layout title="Prayer">
+  <div class="container mx-auto">
+    <h1>Prayer Requests</h1>
+    <PrayerRequestForm />
+  </div>
+</Layout>
+```
+
+## Next steps
+
+Now that you understand the project structure:
+
+<CardGroup cols={2}>
+  <Card title="Components reference" icon="puzzle-piece" href="/components/overview">
+    Explore all available components in detail
+  </Card>
+  <Card title="Pages and routing" icon="file" href="/pages/overview">
+    Learn more about creating and organizing pages
+  </Card>
+  <Card title="API routes" icon="code" href="/api-reference/overview">
+    Discover the API endpoints and how to create new ones
+  </Card>
+  <Card title="Styling guide" icon="paintbrush" href="/styling/overview">
+    Master Tailwind CSS and custom theming
+  </Card>
+</CardGroup>

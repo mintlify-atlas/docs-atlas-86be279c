@@ -1,0 +1,388 @@
+---
+title: "Liturgical Calendar"
+description: "Utility for calculating liturgical seasons and displaying seasonal content"
+---
+
+The `liturgicalCalendar.ts` utility provides functions for determining the current liturgical season based on the Disciples of Christ liturgical calendar. It's used for seasonal theming, banners, and liturgical color coordination throughout the site.
+
+## Overview
+
+This utility calculates liturgical seasons for years 2022-2026, including:
+
+- **Major seasons**: Advent, Christmas, Lent, Easter
+- **Special days**: Palm Sunday, Good Friday, Pentecost, Epiphany, All Saints
+- **Ordinary Time**: Periods between special seasons
+- **Holiday countdowns**: Days until Christmas or Easter
+
+**File location**: `~/workspace/source/src/utils/liturgicalCalendar.ts`
+
+## Exported Functions
+
+### getLiturgicalSeason()
+
+Determines the liturgical season and color for a given date.
+
+<ParamField path="date" type="Date" required>
+  The date to check for liturgical season
+</ParamField>
+
+<ParamField path="Returns" type="LiturgicalSeason">
+  Object containing season information:
+  
+  <ResponseField name="season" type="string">
+    Name of the liturgical season (e.g., "Advent", "Lent", "Easter")
+  </ResponseField>
+  
+  <ResponseField name="color" type="string">
+    Hex color code for the season
+  </ResponseField>
+  
+  <ResponseField name="message" type="string" required={false}>
+    Seasonal greeting message
+  </ResponseField>
+  
+  <ResponseField name="icon" type="string" required={false}>
+    Emoji icon representing the season
+  </ResponseField>
+  
+  <ResponseField name="countdown" type="object" required={false}>
+    Holiday countdown information (if applicable)
+    
+    <ResponseField name="countdown.days" type="number">
+      Number of days until the holiday
+    </ResponseField>
+    
+    <ResponseField name="countdown.holiday" type="string">
+      Name of the upcoming holiday
+    </ResponseField>
+  </ResponseField>
+</ParamField>
+
+**Example usage:**
+
+```typescript
+import { getLiturgicalSeason } from '../utils/liturgicalCalendar';
+
+const today = new Date();
+const season = getLiturgicalSeason(today);
+
+console.log(season.season); // "Advent"
+console.log(season.color);  // "#2563eb"
+console.log(season.message); // "Have a blessed Advent season..."
+console.log(season.icon);   // "🕯️"
+```
+
+### getSeasonalBannerConfig()
+
+Returns banner configuration for special liturgical seasons only. Returns `null` for Ordinary Time (no banner needed).
+
+<ParamField path="date" type="Date" required>
+  The date to check for banner display
+</ParamField>
+
+<ParamField path="Returns" type="LiturgicalSeason | null">
+  Banner configuration object or `null` if no banner should be shown
+</ParamField>
+
+**Example usage:**
+
+```typescript
+import { getSeasonalBannerConfig } from '../utils/liturgicalCalendar';
+
+const today = new Date();
+const bannerConfig = getSeasonalBannerConfig(today);
+
+if (bannerConfig) {
+  // Display seasonal banner
+  console.log(`Show banner: ${bannerConfig.message}`);
+} else {
+  // No banner needed (Ordinary Time)
+  console.log('No seasonal banner');
+}
+```
+
+**Real usage from SeasonalBanner.astro:**
+
+```typescript
+import { getSeasonalBannerConfig } from '../utils/liturgicalCalendar';
+
+function updateSeasonalBanner() {
+  const today = new Date();
+  const normalizedDate = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+    0, 0, 0, 0
+  );
+
+  const bannerConfig = getSeasonalBannerConfig(normalizedDate);
+
+  if (!bannerConfig) {
+    // No banner to display
+    return;
+  }
+
+  // Display banner with season colors and message
+  displayBanner(bannerConfig);
+}
+```
+
+## Liturgical Seasons
+
+### Season Colors
+
+```typescript
+const BRAND_COLORS = {
+  red: '#9e1e3e',      // Default/Brand
+  white: '#FFFFFF',    // Christmas, Easter, Epiphany, All Saints
+  black: '#000000',
+  darkGray: '#333333',
+  lightGray: '#f8f9fa',
+  mediumGray: '#e9ecef'
+};
+```
+
+**Additional liturgical colors:**
+- **Advent**: `#2563eb` (Blue)
+- **Lent**: `#7c3aed` (Purple)
+- **Ordinary Time**: `#16a34a` (Green)
+- **Pentecost**: `#dc2626` (Red)
+
+### Season Definitions
+
+| Season | Color | Icon | Message |
+|--------|-------|------|----------|
+| Advent | Blue (#2563eb) | 🕯️ | "Have a blessed Advent season..." |
+| Christmas | White (#ffffff) | 🎄 | "Have a merry Christmas..." |
+| Epiphany | White (#ffffff) | ⭐ | "Have a blessed Epiphany..." |
+| Lent | Purple (#7c3aed) | 🕊️ | "Have a blessed Lenten season..." |
+| Palm Sunday | Red (#dc2626) | 🌴 | "Have a blessed Palm Sunday..." |
+| Good Friday | Red (#dc2626) | ✝️ | "We remember together..." |
+| Easter | White (#ffffff) | 🌸 | "He is risen!" |
+| Pentecost | Red (#dc2626) | 🔥 | "Have a blessed Pentecost..." |
+| All Saints | White (#ffffff) | 👼 | "Remembering our loved ones..." |
+| Ordinary Time | Green (#16a34a) | - | - |
+
+## Liturgical Calendar Dates
+
+### 2025 Calendar
+
+```typescript
+if (year === 2025) {
+  // Palm Sunday: April 13, 2025
+  // Good Friday: April 18, 2025
+  // Easter: April 20, 2025
+  // Pentecost: June 8, 2025
+  
+  // Lent: March 5 - April 19
+  // Advent: Nov 30 - Dec 24
+  // Ordinary Time: Jan 13 - March 4, June 9 - Nov 29
+}
+```
+
+### 2026 Calendar
+
+```typescript
+if (year === 2026) {
+  // Palm Sunday: March 29, 2026
+  // Good Friday: April 3, 2026
+  // Easter: April 5, 2026
+  // Pentecost: May 24, 2026
+  
+  // Lent: Feb 18 - April 2
+  // Advent: Nov 29 - Dec 24
+  // Ordinary Time: Jan 12 - Feb 17, May 25 - Nov 28
+}
+```
+
+See the full source code for complete date ranges for years 2022-2026.
+
+## Holiday Countdown Feature
+
+### Countdown Display Logic
+
+The `getSeasonalBannerConfig()` function includes countdown functionality:
+
+**Countdown shows when:**
+1. Currently in a special season (countdown added to existing banner)
+2. Within 14 days of a major holiday during Ordinary Time
+
+**Major holidays tracked:**
+- Easter (date varies by year)
+- Christmas (December 25)
+
+**Example countdown output:**
+
+```typescript
+const bannerConfig = getSeasonalBannerConfig(new Date('2025-12-15'));
+
+// Result:
+{
+  season: "Advent",
+  color: "#2563eb",
+  message: "Have a blessed Advent season from your LOCC family!",
+  icon: "🕯️",
+  countdown: {
+    days: 10,
+    holiday: "Christmas"
+  }
+}
+```
+
+### Countdown Calculation
+
+```typescript
+function daysUntil(targetDate: Date, currentDate: Date): number {
+  const target = new Date(
+    targetDate.getFullYear(),
+    targetDate.getMonth(),
+    targetDate.getDate()
+  );
+  const current = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    currentDate.getDate()
+  );
+  const diffTime = target.getTime() - current.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+}
+```
+
+## Easter Date Calculation
+
+The utility includes known Easter dates and a fallback calculation algorithm:
+
+```typescript
+function getEasterDate(year: number): Date | null {
+  const knownEasterDates: Record<number, { month: number; day: number }> = {
+    2023: { month: 4, day: 9 },
+    2024: { month: 3, day: 31 },
+    2025: { month: 4, day: 20 },
+    2026: { month: 4, day: 5 },
+    2027: { month: 3, day: 28 },
+    2028: { month: 4, day: 16 },
+  };
+  
+  if (knownEasterDates[year]) {
+    return new Date(year, knownEasterDates[year].month - 1, knownEasterDates[year].day);
+  }
+  
+  // Fallback: Computus algorithm for calculating Easter
+  // ... (see source code for full implementation)
+}
+```
+
+## TypeScript Interface
+
+### LiturgicalSeason
+
+```typescript
+export interface LiturgicalSeason {
+  season: string;           // Season name
+  color: string;            // Hex color code
+  message?: string;         // Seasonal greeting
+  icon?: string;            // Emoji icon
+  countdown?: {             // Holiday countdown
+    days: number;           // Days until holiday
+    holiday: string;        // Holiday name
+  };
+}
+```
+
+## Usage in Components
+
+### Seasonal Banner Component
+
+```astro
+---
+import { getSeasonalBannerConfig } from '../utils/liturgicalCalendar';
+
+const today = new Date();
+const normalizedDate = new Date(
+  today.getFullYear(),
+  today.getMonth(),
+  today.getDate(),
+  0, 0, 0, 0
+);
+
+const bannerConfig = getSeasonalBannerConfig(normalizedDate);
+---
+
+{bannerConfig && (
+  <div class="seasonal-banner" style={`background-color: ${bannerConfig.color}`}>
+    <span class="icon">{bannerConfig.icon}</span>
+    <p>{bannerConfig.message}</p>
+    {bannerConfig.countdown && (
+      <p class="countdown">
+        {bannerConfig.countdown.days} days until {bannerConfig.countdown.holiday}
+      </p>
+    )}
+  </div>
+)}
+```
+
+### Client-Side Updates
+
+For real-time updates, use in client-side scripts:
+
+```javascript
+import { getSeasonalBannerConfig } from '../utils/liturgicalCalendar';
+
+function updateSeasonalBanner() {
+  const today = new Date();
+  const bannerConfig = getSeasonalBannerConfig(today);
+  
+  // Update DOM with current season
+  if (bannerConfig) {
+    renderBanner(bannerConfig);
+  }
+}
+
+// Update on page load
+updateSeasonalBanner();
+```
+
+## Pages Using This Utility
+
+- **src/components/SeasonalBanner.astro** - Main seasonal banner display
+- **src/utils/clientThumbnailGenerator.js** - Video thumbnail generation with seasonal colors
+- **src/pages/videos.astro** - Video page seasonal theming
+- **src/pages/index.astro** - Homepage seasonal features
+
+## Special Seasons vs. Ordinary Time
+
+**Special seasons** (show banner):
+- Christmas, Easter, Advent, Lent
+- Palm Sunday, Good Friday, Pentecost
+- Epiphany, All Saints
+
+**Ordinary Time** (no banner):
+- Periods between special seasons
+- Returns `null` from `getSeasonalBannerConfig()`
+- Uses green color (#16a34a) from `getLiturgicalSeason()`
+
+## Adding Future Years
+
+To add liturgical dates for a new year:
+
+1. Calculate Easter date for the year
+2. Add date ranges for each season
+3. Follow the existing pattern:
+
+```typescript
+if (year === 2027) {
+  // Easter 2027: March 28, 2027
+  if (dateKey === '2027-3-21') return { season: 'Palm Sunday', ... };
+  if (dateKey === '2027-3-26') return { season: 'Good Friday', ... };
+  if (dateKey === '2027-3-28') return { season: 'Easter', ... };
+  
+  // Lent: Date range
+  // Advent: Date range
+  // Ordinary Time: Date ranges
+}
+```
+
+## Dependencies
+
+No external dependencies - pure TypeScript implementation.

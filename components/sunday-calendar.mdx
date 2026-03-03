@@ -1,0 +1,465 @@
+---
+title: SundayCalendar Component
+description: Dynamic schedule of upcoming Sunday services with API integration and fallback
+---
+
+The `SundayCalendar` component displays upcoming Sunday services by fetching data from a custom events API with an intelligent fallback to a generic Sunday list when data is unavailable.
+
+## Features
+
+- **API Integration**: Fetches real event data from custom calendar API
+- **Intelligent Fallback**: Shows generic Sunday list if API fails
+- **Event Grouping**: Combines multiple services on the same day
+- **Loading States**: Shows spinner during data fetch
+- **Error Handling**: Graceful degradation with user-friendly messages
+- **Responsive Grid**: 2-3 column layout based on screen size
+- **Astro Page Load Support**: Works with View Transitions
+
+## Installation
+
+```astro
+import SundayCalendar from '../components/SundayCalendar.astro';
+```
+
+## Basic Usage
+
+From `src/pages/worship.astro:4`:
+
+```astro
+---
+import SundayCalendar from '../components/SundayCalendar.astro';
+---
+
+<SundayCalendar />
+```
+
+## Props
+
+<ParamField path="title" type="string" default="Upcoming Sunday Services">
+  Main heading displayed above the calendar.
+</ParamField>
+
+<ParamField path="subtitle" type="string" default="Join us for worship every Sunday at 10:30 AM">
+  Descriptive text shown below the title.
+</ParamField>
+
+<ParamField path="maxEvents" type="number" default="6">
+  Maximum number of Sunday services to display from the API.
+</ParamField>
+
+<ParamField path="hideWhenNoData" type="boolean" default="true">
+  Whether to hide the entire section when API fails or returns no data.
+  - `true`: Section is hidden completely
+  - `false`: Shows fallback Sunday list
+</ParamField>
+
+## Examples
+
+### Default Configuration
+
+```astro
+<SundayCalendar />
+```
+
+### Custom Title and Subtitle
+
+```astro
+<SundayCalendar 
+  title="Join Us This Sunday"
+  subtitle="Worship services at 9:00 AM and 10:30 AM"
+/>
+```
+
+### Show More Events
+
+```astro
+<SundayCalendar maxEvents={10} />
+```
+
+### Always Show Fallback on Error
+
+```astro
+<SundayCalendar hideWhenNoData={false} />
+```
+
+## API Integration
+
+Fetches from custom calendar endpoint:
+
+```javascript
+const apiUrl = 'https://calander.locc.us/events';
+const response = await fetch(apiUrl);
+const data = await response.json();
+```
+
+**Expected Response:**
+```json
+{
+  "success": true,
+  "events": [
+    {
+      "summary": "Sunday Service",
+      "start": {
+        "dateTime": "2026-03-08T10:30:00Z",
+        "date": "2026-03-08"
+      },
+      "end": {
+        "dateTime": "2026-03-08T11:45:00Z"
+      }
+    }
+  ]
+}
+```
+
+## Event Processing
+
+### Filtering Sundays
+
+```javascript
+if (eventDate.getDay() === 0) { // Sunday is day 0
+  // Process this event
+}
+```
+
+Only Sunday events are displayed.
+
+### Grouping by Date
+
+```javascript
+const eventsByDate = {};
+events.forEach(event => {
+  const eventDate = new Date(event.start.dateTime || event.start.date);
+  const dateKey = eventDate.toDateString(); // "Sun Mar 08 2026"
+  
+  if (!eventsByDate[dateKey]) {
+    eventsByDate[dateKey] = {
+      date: eventDate,
+      events: []
+    };
+  }
+  eventsByDate[dateKey].events.push(event);
+});
+```
+
+Multiple services on the same Sunday are grouped together.
+
+### Combining Service Times
+
+```javascript
+const timeStrings = dateGroup.events.map(event => {
+  const eventDate = new Date(event.start.dateTime || event.start.date);
+  return eventDate.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit', 
+    hour12: true 
+  });
+});
+
+const timesDisplay = timeStrings.join(' & ');
+// Result: "9:00 AM & 10:30 AM"
+```
+
+## Display States
+
+### Loading State
+
+```html
+<div id="calendar-loading">
+  <div class="animate-spin rounded-full h-8 w-8 border-2 border-brand border-t-transparent"></div>
+  <p>Loading upcoming services...</p>
+</div>
+```
+
+Shown initially while fetching data.
+
+### Success State (API Data)
+
+```html
+<div id="custom-calendar">
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Event cards -->
+  </div>
+</div>
+```
+
+Displays when API returns valid events.
+
+### Fallback State
+
+```html
+<div id="fallback-sundays">
+  <div class="bg-gray-50 rounded-2xl p-8">
+    <h3>Upcoming Sundays</h3>
+    <div class="grid md:grid-cols-2 gap-4">
+      <!-- Generic Sunday cards -->
+    </div>
+  </div>
+</div>
+```
+
+Shown when:
+- API fails to respond
+- API returns no events
+- `hideWhenNoData={false}`
+
+### Error State
+
+```html
+<div id="calendar-error" class="hidden">
+  <div class="bg-red-50 border border-red-200 p-8">
+    <p>Unable to load calendar</p>
+    <p>Please try again later</p>
+  </div>
+</div>
+```
+
+Optionally shown alongside fallback.
+
+## Fallback Sunday Generation
+
+Generates next 8 Sundays automatically:
+
+```javascript
+function showFallbackSundays() {
+  const today = new Date();
+  let currentDate = new Date(today);
+  
+  // Find next Sunday
+  const daysUntilSunday = (7 - currentDate.getDay()) % 7;
+  currentDate.setDate(currentDate.getDate() + daysUntilSunday);
+  
+  // If today is Sunday, start from today
+  if (today.getDay() !== 0) {
+    currentDate.setDate(currentDate.getDate() + 7);
+  }
+
+  // Generate 8 future Sundays
+  for (let i = 0; i < 8; i++) {
+    const sundayDate = new Date(currentDate);
+    sundayDate.setDate(currentDate.getDate() + (i * 7));
+    // ...
+  }
+}
+```
+
+**Fallback Features:**
+- Generic "Sunday Service" title
+- Fixed time: "10:30 AM"
+- Next 8 consecutive Sundays
+- Simplified card design
+
+## Event Card Design
+
+```html
+<div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all">
+  <div class="flex items-start gap-4">
+    <!-- Icon -->
+    <div class="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center">
+      <svg class="w-6 h-6 text-brand"><!-- Calendar icon --></svg>
+    </div>
+    
+    <!-- Content -->
+    <div class="flex-1">
+      <h3 class="font-semibold text-lg text-gray-900 mb-2">Sunday Service</h3>
+      <p class="text-gray-600 text-sm mb-1">Sunday, March 8, 2026</p>
+      <p class="text-gray-500 text-sm">9:00 AM & 10:30 AM</p>
+    </div>
+  </div>
+</div>
+```
+
+## Responsive Grid
+
+```html
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+```
+
+**Breakpoints:**
+- Mobile (`< 768px`): 1 column
+- Tablet (`≥ 768px`): 2 columns
+- Desktop (`≥ 1024px`): 3 columns
+
+## Astro Integration
+
+Supports Astro View Transitions:
+
+```javascript
+// Standard DOM load
+document.addEventListener('DOMContentLoaded', loadCustomCalendar);
+
+// Astro page transitions
+document.addEventListener('astro:page-load', loadCustomCalendar);
+```
+
+Ensures calendar loads on both initial page load and client-side navigation.
+
+## Error Handling
+
+```javascript
+try {
+  const response = await fetch(apiUrl);
+  if (!response.ok) {
+    throw new Error(`API returned status ${response.status}`);
+  }
+  
+  const data = await response.json();
+  
+  if (data.success && data.events && data.events.length > 0) {
+    displayCustomEvents(data.events);
+  } else {
+    // No events - use fallback
+    if (hideWhenNoData) {
+      section.style.display = 'none';
+    } else {
+      showFallbackSundays();
+    }
+  }
+} catch (error) {
+  console.error('Error loading calendar:', error);
+  
+  if (hideWhenNoData) {
+    section.style.display = 'none';
+  } else {
+    showFallbackSundays();
+    document.getElementById('calendar-error')?.classList.remove('hidden');
+  }
+}
+```
+
+## Date Formatting
+
+### Full Date Format
+
+```javascript
+const formattedDate = dateGroup.date.toLocaleDateString('en-US', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+// Result: "Sunday, March 8, 2026"
+```
+
+### Time Format
+
+```javascript
+const time = eventDate.toLocaleTimeString('en-US', { 
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true 
+});
+// Result: "10:30 AM"
+```
+
+## Sorting
+
+### Events by Date
+
+```javascript
+const sortedDates = Object.values(eventsByDate)
+  .sort((a, b) => a.date.getTime() - b.date.getTime());
+```
+
+### Services within a Day
+
+```javascript
+dateGroup.events.sort((a, b) => {
+  const timeA = new Date(a.start.dateTime || a.start.date);
+  const timeB = new Date(b.start.dateTime || b.start.date);
+  return timeA.getTime() - timeB.getTime();
+});
+```
+
+Ensures chronological order.
+
+## Customization
+
+### Change API Endpoint
+
+```javascript
+const apiUrl = 'https://your-calendar-api.com/events';
+```
+
+### Modify Fallback Count
+
+```javascript
+// Generate 12 Sundays instead of 8
+for (let i = 0; i < 12; i++) {
+  // ...
+}
+```
+
+### Change Default Time
+
+```javascript
+// In fallback card
+<p class="text-xs text-gray-500 mt-1">9:00 AM</p>
+```
+
+### Custom Event Filtering
+
+```javascript
+// Show all events, not just Sundays
+if (eventDate.getDay() >= 0) { // Any day
+  // Process event
+}
+```
+
+## Accessibility
+
+- Semantic HTML structure
+- Loading state with `role="status"`
+- Error alerts with `role="alert"`
+- High contrast colors
+- Descriptive text
+- Keyboard accessible
+
+## Performance
+
+- Single API call on load
+- Client-side processing
+- Cached date calculations
+- Minimal DOM updates
+- No polling/continuous requests
+
+## Testing
+
+### Test API Response
+
+```javascript
+// Mock successful response
+const mockData = {
+  success: true,
+  events: [
+    {
+      summary: "Sunday Service",
+      start: { dateTime: "2026-03-08T10:30:00Z" }
+    }
+  ]
+};
+```
+
+### Test Fallback
+
+```javascript
+// Mock API failure
+fetch.mockRejectedValue(new Error('API Error'));
+```
+
+### Test Date Calculations
+
+```javascript
+const testDate = new Date('2026-03-04'); // Wednesday
+const nextSunday = /* calculation */;
+// Should return 2026-03-08
+```
+
+## Related Components
+
+Used on:
+- **Worship Page** (`/worship`): Main calendar display
+
+## Related Files
+
+- API: `https://calander.locc.us/events`
+- Used in: `src/pages/worship.astro`

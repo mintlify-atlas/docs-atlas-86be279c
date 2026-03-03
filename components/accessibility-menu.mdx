@@ -1,0 +1,254 @@
+---
+title: AccessibilityMenu Component
+description: WCAG 2.1 AA compliant accessibility controls panel with comprehensive customization options
+---
+
+The `AccessibilityMenu` component provides a comprehensive accessibility control panel that allows users to customize their browsing experience. It includes text sizing, contrast adjustments, motion reduction, focus indicators, font selection, and line spacing controls.
+
+## Features
+
+- **WCAG 2.1 AA Compliant**: Meets web accessibility standards
+- **Skip to Main Content**: First focusable element for keyboard navigation
+- **Text Size Control**: Adjust font size from 75% to 200%
+- **Display Options**: High contrast, reduce motion, highlight links, enhanced focus
+- **Font Selection**: Default, system readable, or dyslexia-friendly fonts
+- **Line Spacing**: Normal, relaxed, or loose spacing options
+- **Keyboard Shortcuts**: Alt+A to toggle menu, full keyboard navigation
+- **Settings Persistence**: Saves preferences to cookies (with user consent)
+- **Responsive Design**: Works on all screen sizes
+
+## Installation
+
+No props required - this is a standalone component.
+
+```astro
+---
+import AccessibilityMenu from '../components/AccessibilityMenu.astro';
+---
+
+<AccessibilityMenu />
+```
+
+## Usage
+
+Typically included in the main layout file so it's available on every page:
+
+```astro title="src/layouts/Layout.astro"
+---
+import AccessibilityMenu from '../components/AccessibilityMenu.astro';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Head content -->
+  </head>
+  <body>
+    <Header />
+    <main id="main-content">
+      <slot />
+    </main>
+    <Footer />
+    
+    <AccessibilityMenu />
+  </body>
+</html>
+```
+
+## Props
+
+This component does not accept any props. All configuration is handled internally through user interaction.
+
+## Features in Detail
+
+### Skip Link
+
+Provides a "Skip to main content" link as the first focusable element on the page:
+- Hidden until focused via keyboard (Tab key)
+- Links to `#main-content` element
+- WCAG requirement for keyboard navigation
+
+### Toggle Button
+
+Floating accessibility icon button:
+- Fixed position at bottom-right of screen
+- Opens the accessibility panel
+- Keyboard accessible with focus indicator
+- Mobile-friendly positioning
+
+### Text Size Controls
+
+- Range: 75% to 200% (adjustable in 25% increments)
+- Default: 100%
+- Updates live as user adjusts
+- Screen reader announcements for changes
+
+### Display Toggles
+
+<ParamField path="High Contrast" type="toggle">
+  Increases color contrast by 25% using CSS filters. Makes text easier to read for users with visual impairments.
+</ParamField>
+
+<ParamField path="Reduce Motion" type="toggle">
+  Disables animations and transitions. Respects `prefers-reduced-motion` system preference.
+</ParamField>
+
+<ParamField path="Highlight Links" type="toggle">
+  Adds yellow background highlight to all links and underlines them for better visibility.
+</ParamField>
+
+<ParamField path="Enhanced Focus" type="toggle">
+  Shows larger, more visible focus outlines (3px solid amber) when navigating with keyboard.
+</ParamField>
+
+### Font Options
+
+<ParamField path="Default" type="option">
+  Uses the site's default font family (Albert Sans).
+</ParamField>
+
+<ParamField path="System Readable" type="option">
+  Switches to system fonts: `-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif`
+</ParamField>
+
+<ParamField path="Dyslexia Friendly" type="option">
+  Uses OpenDyslexic or Comic Sans with increased letter and word spacing.
+</ParamField>
+
+### Line Spacing Options
+
+<ParamField path="Normal" type="option">
+  Default line height (theme default)
+</ParamField>
+
+<ParamField path="Relaxed" type="option">
+  Increased to `line-height: 1.75` for better readability
+</ParamField>
+
+<ParamField path="Loose" type="option">
+  Maximum spacing at `line-height: 2` for easiest reading
+</ParamField>
+
+## Keyboard Navigation
+
+The component includes comprehensive keyboard support:
+
+| Shortcut | Action |
+|----------|--------|
+| `Alt + A` | Opens or closes the accessibility menu |
+| `Tab` | Moves to the next interactive element |
+| `Shift + Tab` | Moves to the previous element |
+| `Enter` or `Space` | Activates buttons and toggles |
+| `Escape` | Closes the menu |
+
+## Persistence & Privacy
+
+Settings are stored in browser cookies **only if the user has accepted cookies** via the CookieBanner component:
+
+```typescript
+function canSave(): boolean {
+  const consent = document.cookie.split('; ').find(row => row.startsWith('cookie-consent='));
+  if (!consent) return false;
+  const value = decodeURIComponent(consent.split('=')[1]);
+  return value === 'all' || value === 'partial';
+}
+```
+
+- Cookie name: `a11y-settings`
+- Expiration: 365 days
+- Path: `/` (site-wide)
+- SameSite: `Lax`
+
+## System Preferences Detection
+
+The component automatically detects and applies system-level preferences:
+
+```javascript
+// Check for system preference for reduced motion
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  settings.reduceMotion = true;
+}
+
+// Check for system preference for high contrast
+if (window.matchMedia('(prefers-contrast: more)').matches) {
+  settings.contrast = true;
+}
+```
+
+## Applied CSS Classes
+
+When settings are enabled, these classes are added to the `<body>` element:
+
+- `.a11y-high-contrast` - Increases contrast via CSS filter
+- `.a11y-reduce-motion` - Disables all animations and transitions
+- `.a11y-highlight-links` - Highlights all links with yellow background
+- `.a11y-enhanced-focus` - Shows enhanced focus indicators
+- `.a11y-font-readable` - Applies system fonts
+- `.a11y-font-dyslexic` - Applies dyslexia-friendly fonts
+- `.a11y-spacing-relaxed` - Increases line spacing to 1.75
+- `.a11y-spacing-loose` - Increases line spacing to 2
+
+## Screen Reader Support
+
+- Live region announcements for all setting changes
+- Proper ARIA labels and roles
+- Hidden decorative elements with `aria-hidden="true"`
+- Focus management and trapping within the panel
+
+## Customization
+
+### Changing Default Position
+
+Modify the `.a11y-toggle` CSS:
+
+```css
+.a11y-toggle {
+  /* Default position */
+  bottom: 5rem;
+  right: 1.25rem;
+  
+  /* Alternative: left side */
+  left: 1.25rem;
+  right: auto;
+}
+```
+
+### Adjusting Size Range
+
+Modify the increment logic in the script:
+
+```javascript
+sizeDecrease?.addEventListener('click', () => {
+  if (settings.fontSize > 50) {  // Change minimum
+    settings.fontSize -= 10;      // Change increment
+    // ...
+  }
+});
+```
+
+## Accessibility Notes
+
+<Note>
+  The component itself is fully accessible and serves as a reference implementation of accessible UI patterns:
+  - Modal dialog with proper focus trapping
+  - Custom switch controls with ARIA
+  - Keyboard-only operation
+  - Screen reader announcements
+</Note>
+
+<Warning>
+  Ensure your main content container has `id="main-content"` for the skip link to work properly.
+</Warning>
+
+## Browser Compatibility
+
+- Modern browsers (Chrome, Firefox, Safari, Edge)
+- Requires JavaScript enabled
+- CSS Grid and Flexbox support
+- CSS custom properties support
+- Media queries for responsive design
+
+## Related Components
+
+- **CookieBanner**: Manages cookie consent for settings persistence
+- **Layout**: Typically where AccessibilityMenu is included

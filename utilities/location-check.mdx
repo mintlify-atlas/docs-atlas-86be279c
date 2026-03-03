@@ -1,0 +1,280 @@
+---
+title: "Location Check"
+description: "Utility for detecting local visitors based on geographic location"
+---
+
+The `locationCheck.ts` utility provides functions for determining whether a website visitor is located near Lake Ozark, Missouri. This is used to conditionally display location-specific content and features throughout the site.
+
+## Overview
+
+This utility uses geolocation data to identify visitors within approximately 50 miles of Lake Ozark Christian Church. It checks multiple criteria including:
+
+- Known local cities and counties
+- Distance calculation using the Haversine formula
+- Geographic coordinates (latitude/longitude)
+
+**File location**: `~/workspace/source/src/utils/locationCheck.ts`
+
+## Exported Functions
+
+### isLocalVisitor()
+
+Determines if the current visitor is local to Lake Ozark area.
+
+<ParamField path="Returns" type="Promise<boolean>">
+  Returns `true` if visitor is local, `false` otherwise
+</ParamField>
+
+**Example usage:**
+
+```typescript
+import { isLocalVisitor } from '../utils/locationCheck';
+
+const isLocal = await isLocalVisitor();
+
+if (isLocal) {
+  // Show local-specific content
+}
+```
+
+**Real usage from index.astro:**
+
+```typescript
+import { isLocalVisitor } from '../utils/locationCheck';
+
+// This page uses server-side rendering for location checking
+export const prerender = false;
+
+let isLocal = false;
+try {
+  isLocal = await isLocalVisitor();
+} catch (error) {
+  console.warn('Location check failed, defaulting to non-local:', error);
+  isLocal = false;
+}
+```
+
+### getVisitorInfo()
+
+Retrieves detailed information about the visitor's location, including whether they are local and the reason for the determination.
+
+<ParamField path="Returns" type="Promise<VisitorInfo>">
+  Object containing location details:
+  
+  <ResponseField name="isLocal" type="boolean">
+    Whether the visitor is considered local
+  </ResponseField>
+  
+  <ResponseField name="distance" type="number" required={false}>
+    Distance in miles from Lake Ozark (if coordinates available)
+  </ResponseField>
+  
+  <ResponseField name="reason" type="string">
+    Explanation for the local/non-local determination
+  </ResponseField>
+</ParamField>
+
+**Example usage:**
+
+```typescript
+import { getVisitorInfo } from '../utils/locationCheck';
+
+const info = await getVisitorInfo();
+console.log(`Is local: ${info.isLocal}`);
+console.log(`Reason: ${info.reason}`);
+
+if (info.distance) {
+  console.log(`Distance: ${info.distance} miles`);
+}
+```
+
+**Real usage from Footer.astro:**
+
+```typescript
+import { getVisitorInfo } from '../utils/locationCheck';
+
+const info = await getVisitorInfo();
+const isLocal = info.isLocal;
+```
+
+## Local Area Definition
+
+The utility defines the local area using several constants:
+
+### LOCAL_CITIES
+
+Array of cities within approximately 50 miles of Lake Ozark:
+
+```typescript
+export const LOCAL_CITIES = [
+  // Lake Area Core
+  'Lake Ozark', 'Osage Beach', 'Camdenton', 'Sunrise Beach',
+  'Village of Four Seasons', 'Rocky Mount', 'Lakeside',
+  'Linn Creek', 'Eldon', 'Kaiser', 'Laurie', 'Versailles',
+  'Gravois Mills', 'Stover', 'Tuscumbia',
+  
+  // Nearby Cities
+  'Lebanon', 'Richland', 'Iberia', 'Brumley', 'Montreal',
+  'Climax Springs', 'Macks Creek', 'Barnett', 'Cole Camp',
+  'Lincoln', 'Warsaw', 'Edwards', 'Fortuna', 'California', 'Tipton',
+];
+```
+
+### LOCAL_COUNTIES
+
+Array of counties considered local to Lake Ozark:
+
+```typescript
+export const LOCAL_COUNTIES = [
+  'Camden', 'Miller', 'Morgan', 'Benton', 'Laclede',
+  'Pulaski', 'Cole', 'Moniteau', 'Cooper', 'Pettis',
+];
+```
+
+## How It Works
+
+The location check follows this logic:
+
+1. **Fetch geolocation data** from `https://geo.locc.us/where` (5-second timeout)
+2. **Check country**: If not in the US, return `isLocal: false`
+3. **For Missouri visitors**:
+   - Check if city matches `LOCAL_CITIES` array
+   - Check if county matches `LOCAL_COUNTIES` array
+   - Calculate distance using coordinates (Haversine formula)
+   - Return `isLocal: true` if within 50 miles
+4. **Out-of-state visitors**: Return `isLocal: false`
+5. **On error or timeout**: Return `isLocal: false` with appropriate reason
+
+## Distance Calculation
+
+The utility uses the Haversine formula to calculate distance between two geographic points:
+
+```typescript
+function calculateDistance(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number
+): number {
+  const R = 3959; // Earth's radius in miles
+  // ... Haversine formula implementation
+  return R * c; // Distance in miles
+}
+```
+
+**Lake Ozark coordinates:**
+- Latitude: `38.1981839`
+- Longitude: `-92.6386717`
+
+## TypeScript Interfaces
+
+### GeoResponse
+
+Response from the geolocation API:
+
+```typescript
+interface GeoResponse {
+  country_code: string;
+  country_name: string;
+  region: string;
+  city: string;
+  county?: string;
+  latitude: string;
+  longitude: string;
+  ip: string;
+  gdpr: boolean;
+  cpa: boolean;
+  lgpd: boolean;
+  pipeda: boolean;
+  appa: boolean;
+  language: string;
+  timezone: string;
+  asn: number;
+}
+```
+
+### VisitorInfo
+
+Returned by `getVisitorInfo()`:
+
+```typescript
+interface VisitorInfo {
+  isLocal: boolean;
+  distance?: number;
+  reason: string;
+}
+```
+
+## Server-Side Rendering Required
+
+Pages using location check utilities must use server-side rendering:
+
+```typescript
+// Disable prerendering to enable SSR
+export const prerender = false;
+```
+
+## Error Handling
+
+The utility includes comprehensive error handling:
+
+- **API request failures**: Returns `isLocal: false` with reason "API request failed"
+- **Timeout (5 seconds)**: Returns `isLocal: false` with reason "Location check timed out"
+- **Other errors**: Returns `isLocal: false` with error message in reason
+
+**Best practice:**
+
+```typescript
+let isLocal = false;
+try {
+  isLocal = await isLocalVisitor();
+} catch (error) {
+  console.warn('Location check failed:', error);
+  isLocal = false; // Safe default
+}
+```
+
+## Usage Examples
+
+### Conditional Content Display
+
+```typescript
+import { isLocalVisitor } from '../utils/locationCheck';
+
+const isLocal = await isLocalVisitor();
+```
+
+```astro
+{isLocal && (
+  <section class="local-events">
+    <h2>Events Near You</h2>
+    <!-- Local-specific content -->
+  </section>
+)}
+```
+
+### Debug Information
+
+```typescript
+import { getVisitorInfo } from '../utils/locationCheck';
+
+const info = await getVisitorInfo();
+console.log('Visitor Info:', info);
+// Example output:
+// {
+//   isLocal: true,
+//   distance: 12.5,
+//   reason: "Within 50 miles of Lake Ozark (13 miles)"
+// }
+```
+
+## Pages Using This Utility
+
+- **src/pages/index.astro** - Homepage local content
+- **src/pages/worship.astro** - Worship page location features
+- **src/pages/children-youth.astro** - Children & youth page
+- **src/ui/Footer.astro** - Footer location-based content
+
+## Dependencies
+
+- **Geolocation API**: `https://geo.locc.us/where`
+- **Fetch API**: Built-in browser/Node.js fetch
+- **AbortController**: For request timeout handling

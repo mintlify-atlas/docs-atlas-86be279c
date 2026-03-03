@@ -1,0 +1,203 @@
+---
+title: '/api/videos.json'
+description: 'Returns video data from the church YouTube channel as JSON'
+---
+
+## Overview
+
+The videos JSON endpoint fetches the latest church service videos from YouTube and returns them as structured JSON data. This endpoint processes videos from the church's YouTube uploads playlist, filters for service videos, parses dates from titles, and returns them sorted by date.
+
+## Endpoint Details
+
+<ParamField path="method" type="string">
+  GET
+</ParamField>
+
+<ParamField path="path" type="string">
+  /api/videos.json
+</ParamField>
+
+## Query Parameters
+
+This endpoint does not accept any query parameters.
+
+## Response
+
+### Success Response (200 OK)
+
+<ResponseField name="videos" type="array">
+  Array of video objects, sorted by date (most recent first)
+  
+  <ResponseField name="id" type="string">
+    YouTube video ID (used to construct video URLs and default thumbnails)
+  </ResponseField>
+  
+  <ResponseField name="title" type="string">
+    Full video title from YouTube
+  </ResponseField>
+  
+  <ResponseField name="customThumbnail" type="string" optional>
+    URL to a custom thumbnail image (if one exists for this video). When not provided, the default YouTube thumbnail is used.
+  </ResponseField>
+</ResponseField>
+
+### Error Response (500 Internal Server Error)
+
+<ResponseField name="error" type="string">
+  Error message when video fetching fails
+  
+  ```json
+  {
+    "error": "Failed to fetch videos"
+  }
+  ```
+</ResponseField>
+
+## Response Headers
+
+<ResponseField name="Content-Type" type="string">
+  Set to `application/json`
+</ResponseField>
+
+<ResponseField name="Cache-Control" type="string">
+  Success: `public, max-age=300, stale-while-revalidate=600`
+  
+  Error: `no-cache, no-store, must-revalidate`
+</ResponseField>
+
+## Caching Strategy
+
+The endpoint implements intelligent caching to reduce YouTube API calls:
+
+- **Cache Duration**: 5 minutes (300 seconds)
+- **Stale-While-Revalidate**: 10 minutes (600 seconds)
+- **Rationale**: Videos don't change frequently, so short caching improves performance while ensuring fresh data
+
+## Example Response
+
+```json
+[
+  {
+    "id": "FIkeDt8Wcqw",
+    "title": "LOCC | December 29, 2024 | Service",
+    "customThumbnail": "https://cdn.lakeozarkdisciples.org/images/12-29-24.png?raw=true"
+  },
+  {
+    "id": "jDp0lVpSzWI",
+    "title": "Church Service - December 24, 2024",
+    "customThumbnail": "https://cdn.lakeozarkdisciples.org/images/12-24-24.png?raw=true"
+  },
+  {
+    "id": "abc123defgh",
+    "title": "LOCC | December 15, 2024 | Rev. Lina Eddy"
+  }
+]
+```
+
+## Example Requests
+
+### Using JavaScript Fetch
+
+```javascript
+fetch('/api/videos.json')
+  .then(response => response.json())
+  .then(videos => {
+    console.log(`Found ${videos.length} videos`);
+    videos.forEach(video => {
+      console.log(`${video.title} - https://youtube.com/watch?v=${video.id}`);
+    });
+  })
+  .catch(error => console.error('Error fetching videos:', error));
+```
+
+### Using cURL
+
+```bash
+curl https://lakeozarkdisciples.org/api/videos.json | jq '.'
+```
+
+### With Error Handling
+
+```javascript
+async function getVideos() {
+  try {
+    const response = await fetch('/api/videos.json');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const videos = await response.json();
+    
+    if (videos.error) {
+      console.error('API returned error:', videos.error);
+      return [];
+    }
+    
+    return videos;
+  } catch (error) {
+    console.error('Failed to fetch videos:', error);
+    return [];
+  }
+}
+
+const videos = await getVideos();
+```
+
+## Video Processing
+
+The endpoint performs several processing steps:
+
+1. **Fetch from YouTube**: Retrieves videos from the church's uploads playlist (`UUUcLKfZo5Su6-ypmt1dkPKA`)
+2. **Filter**: Keeps only videos with "service" or "locc" in the title
+3. **Exclude**: Removes specific excluded video IDs (e.g., announcements, non-service content)
+4. **Parse Dates**: Extracts dates from video titles using multiple format patterns
+5. **Sort**: Orders videos by parsed date (most recent first)
+6. **Custom Thumbnails**: Applies custom thumbnail URLs for specific videos
+7. **Return**: Sends processed video data as JSON
+
+## Supported Date Formats
+
+The endpoint can parse dates from video titles in these formats:
+
+- Numeric: `MM/DD/YYYY`, `MM-DD-YYYY`, `MMDDYY`, `MDDYY`
+- Full month: `January 15, 2024`, `January 15 2024`
+- Abbreviated: `Jan 15, 2024`, `Jan 15 2024`
+- With ordinals: `January 15th, 2024`, `Jan 15th 2024`
+
+Examples:
+- `"LOCC | December 29, 2024"` → December 29, 2024
+- `"Service - 12/15/24"` → December 15, 2024
+- `"Church Service | Jan 1st, 2025"` → January 1, 2025
+
+## Custom Thumbnails
+
+Videos may include a `customThumbnail` field pointing to custom-designed thumbnail images hosted on the church's CDN. These are used instead of YouTube's auto-generated thumbnails for a consistent brand appearance.
+
+If `customThumbnail` is not present, use the YouTube default:
+
+```javascript
+const thumbnailUrl = video.customThumbnail || 
+  `https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`;
+```
+
+## Use Cases
+
+- **Homepage Video Grid**: Display recent sermons on the church website
+- **Archives Page**: Show chronological list of all service videos
+- **Search/Filter**: Build custom search and filtering interfaces
+- **Mobile Apps**: Fetch video data for native mobile applications
+- **Third-party Integrations**: Provide video data to partner services
+
+## Implementation Details
+
+The endpoint:
+
+- Uses the `youtube-sr` library to fetch YouTube playlist data
+- Is **not pre-rendered** and runs at request time for fresh data
+- Implements stale-while-revalidate caching for optimal performance
+- Includes fallback handling if YouTube API requests fail
+- Filters out non-service videos automatically
+- Maintains a custom thumbnail map for specific video IDs
+
+Source code: `/home/daytona/workspace/source/src/pages/api/videos.json.ts:18`

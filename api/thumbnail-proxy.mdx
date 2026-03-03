@@ -1,0 +1,158 @@
+---
+title: '/api/thumbnail-proxy'
+description: 'Proxy endpoint for fetching thumbnail images with CORS headers'
+---
+
+## Overview
+
+The thumbnail proxy endpoint fetches external thumbnail images and serves them with CORS headers enabled. This allows client-side JavaScript to manipulate images from external domains using canvas operations.
+
+## Endpoint Details
+
+<ParamField path="method" type="string">
+  GET
+</ParamField>
+
+<ParamField path="path" type="string">
+  /api/thumbnail-proxy
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="url" type="string" required>
+  The URL of the thumbnail image to proxy. Must be from an allowed domain.
+</ParamField>
+
+## Allowed Domains
+
+For security, only images from the following domains are permitted:
+
+- `usercontent.donorkit.io`
+- `cdn.lakeozarkdisciples.org`
+- `img.youtube.com`
+
+Requests for images from other domains will return a `403 Forbidden` error.
+
+## Response
+
+### Success Response (200 OK)
+
+<ResponseField name="body" type="binary">
+  The image data as a binary buffer
+</ResponseField>
+
+<ResponseField name="Content-Type" type="string">
+  The MIME type of the image (e.g., `image/jpeg`, `image/png`). Defaults to `image/jpeg` if not provided by the source.
+</ResponseField>
+
+<ResponseField name="Access-Control-Allow-Origin" type="string">
+  Set to `*` to allow cross-origin requests from any domain
+</ResponseField>
+
+<ResponseField name="Access-Control-Allow-Methods" type="string">
+  Set to `GET`
+</ResponseField>
+
+<ResponseField name="Cache-Control" type="string">
+  Set to `public, max-age=86400` (24 hours)
+</ResponseField>
+
+### Error Responses
+
+<ResponseField name="400 Bad Request" type="string">
+  Returned when the `url` query parameter is missing
+  
+  ```text
+  Missing url parameter
+  ```
+</ResponseField>
+
+<ResponseField name="403 Forbidden" type="string">
+  Returned when the image URL is from a domain not in the allowed list
+  
+  ```text
+  Domain not allowed
+  ```
+</ResponseField>
+
+<ResponseField name="404 Not Found" type="string">
+  Returned when the source image cannot be fetched (proxies the upstream status)
+  
+  ```text
+  Failed to fetch image
+  ```
+</ResponseField>
+
+<ResponseField name="500 Internal Server Error" type="string">
+  Returned when an unexpected error occurs during processing
+  
+  ```text
+  Internal server error
+  ```
+</ResponseField>
+
+## Example Requests
+
+### Using JavaScript Fetch
+
+```javascript
+const thumbnailUrl = 'https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg';
+const proxyUrl = `/api/thumbnail-proxy?url=${encodeURIComponent(thumbnailUrl)}`;
+
+fetch(proxyUrl)
+  .then(response => response.blob())
+  .then(blob => {
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(blob);
+    document.body.appendChild(img);
+  })
+  .catch(error => console.error('Error loading thumbnail:', error));
+```
+
+### Using cURL
+
+```bash
+curl "https://lakeozarkdisciples.org/api/thumbnail-proxy?url=https%3A%2F%2Fimg.youtube.com%2Fvi%2FVIDEO_ID%2Fmaxresdefault.jpg" \
+  --output thumbnail.jpg
+```
+
+### Loading into Canvas
+
+```javascript
+const thumbnailUrl = 'https://cdn.lakeozarkdisciples.org/images/custom-thumbnail.png';
+const proxyUrl = `/api/thumbnail-proxy?url=${encodeURIComponent(thumbnailUrl)}`;
+
+const img = new Image();
+img.crossOrigin = 'anonymous';
+img.onload = () => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.drawImage(img, 0, 0);
+  
+  // Now you can manipulate the canvas
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // ... apply filters, transformations, etc.
+};
+img.src = proxyUrl;
+```
+
+## Use Cases
+
+- **Canvas Manipulation**: Fetch YouTube thumbnails for client-side image processing
+- **Custom Thumbnails**: Proxy custom church thumbnails stored on CDN
+- **CORS Bypass**: Access images from external domains that don't provide CORS headers
+- **Caching**: Take advantage of 24-hour browser caching for frequently accessed images
+
+## Implementation Details
+
+The endpoint:
+
+1. Validates that the `url` parameter is provided
+2. Checks that the URL hostname is from an allowed domain
+3. Fetches the image from the source URL
+4. Returns the image with CORS headers to enable cross-origin access
+5. Includes cache headers for 24-hour browser caching
+
+This endpoint is **not pre-rendered** and runs at request time to handle dynamic image URLs.

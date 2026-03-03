@@ -1,0 +1,195 @@
+---
+title: Deploy to Vercel
+description: Step-by-step guide to deploy the Lake Ozark Christian Church website to Vercel with serverless functions
+---
+
+This guide walks you through deploying the Lake Ozark Christian Church Astro website to Vercel with server-side rendering (SSR) and API routes.
+
+## Overview
+
+The website is configured to use Vercel's serverless adapter, which enables:
+
+- **Server-side rendering (SSR)** for dynamic pages
+- **API routes** that run as serverless functions at request time
+- **Automatic deployment** on every git push
+- **Edge caching** for optimal performance
+
+## Vercel Adapter Configuration
+
+The site uses the `@astrojs/vercel` adapter in serverless mode, configured in `astro.config.mjs`:
+
+```javascript
+import { defineConfig } from 'astro/config';
+import tailwind from '@astrojs/tailwind';
+import react from '@astrojs/react';
+import vercel from '@astrojs/vercel/serverless';
+
+export default defineConfig({
+  integrations: [
+    tailwind(),
+    react()
+  ],
+  
+  // Server mode enables SSR and API routes
+  output: 'server',
+  
+  // Vercel serverless adapter
+  adapter: vercel(),
+  
+  markdown: {
+    shikiConfig: {
+      theme: 'github-light'
+    }
+  }
+});
+```
+
+The `output: 'server'` mode ensures that API routes (like `/api/videos.json` and `/api/thumbnail-proxy`) run at request time rather than being pre-rendered at build time.
+
+## Deployment Steps
+
+<Steps>
+
+<Step title="Prepare Your Repository">
+  Ensure your code is pushed to a GitHub repository. Vercel connects directly to GitHub for automatic deployments.
+  
+  ```bash
+  git add .
+  git commit -m "Prepare for Vercel deployment"
+  git push origin main
+  ```
+</Step>
+
+<Step title="Connect to Vercel">
+  1. Go to [vercel.com](https://vercel.com) and sign in with GitHub
+  2. Click **"Add New Project"**
+  3. Import your repository from the list
+  4. Select the repository for Lake Ozark Christian Church
+</Step>
+
+<Step title="Configure Build Settings">
+  Vercel will auto-detect the Astro framework. Verify these settings:
+  
+  - **Framework Preset**: Astro
+  - **Build Command**: `npm run build`
+  - **Output Directory**: `dist`
+  - **Install Command**: `npm install`
+  
+  These match the scripts defined in `package.json`:
+  
+  ```json
+  {
+    "scripts": {
+      "dev": "astro dev",
+      "build": "astro build",
+      "preview": "astro preview"
+    }
+  }
+  ```
+</Step>
+
+<Step title="Set Environment Variables (Optional)">
+  If your site requires any environment variables, add them in the Vercel dashboard:
+  
+  1. Go to **Project Settings** → **Environment Variables**
+  2. Add any required variables
+  3. Click **Save**
+  
+  <Note>
+    Currently, the site doesn't require environment variables. The YouTube video fetching uses the `youtube-sr` library which doesn't require API keys.
+  </Note>
+</Step>
+
+<Step title="Deploy">
+  Click **"Deploy"** to start the build process. Vercel will:
+  
+  1. Clone your repository
+  2. Install dependencies
+  3. Run the build command
+  4. Deploy to a production URL
+  
+  The first deployment takes 2-3 minutes. Subsequent deployments are faster.
+</Step>
+
+<Step title="Verify API Routes">
+  After deployment, test the API routes to ensure they're working:
+  
+  - `/api/videos.json` - Should return YouTube video data
+  - `/api/thumbnail-proxy?url=<image-url>` - Should proxy thumbnail images
+  
+  Both routes use `prerender: false` to ensure they run at request time:
+  
+  ```typescript
+  // src/pages/api/videos.json.ts
+  export const prerender = false;
+  ```
+</Step>
+
+</Steps>
+
+## Automatic Deployments
+
+Once connected, Vercel automatically deploys:
+
+- **Production deployments** on pushes to the `main` branch
+- **Preview deployments** for pull requests and other branches
+
+Each deployment gets a unique URL for testing before going live.
+
+## Performance Features
+
+### Caching Strategy
+
+The API routes implement cache headers for optimal performance:
+
+```typescript
+// 5-minute cache with 10-minute stale-while-revalidate
+const CACHE_MAX_AGE = 300;
+const STALE_WHILE_REVALIDATE = 600;
+
+headers: {
+  'Cache-Control': `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
+}
+```
+
+This means:
+- Fresh content served for 5 minutes
+- Stale content served while fetching fresh data (up to 10 minutes)
+- Reduces API calls to YouTube and improves response times
+
+### Edge Network
+
+Vercel automatically distributes your site across their global edge network, ensuring fast load times worldwide.
+
+## Troubleshooting
+
+### Build Failures
+
+If the build fails, check:
+
+1. **Build logs** in the Vercel dashboard for specific errors
+2. **Dependencies** are correctly listed in `package.json`
+3. **Node version** compatibility (Vercel uses Node 18+ by default)
+
+### API Route Issues
+
+If API routes aren't working:
+
+1. Verify `output: 'server'` is set in `astro.config.mjs`
+2. Ensure routes have `export const prerender = false`
+3. Check function logs in Vercel dashboard under **Functions** tab
+
+### Domain Configuration
+
+To use a custom domain:
+
+1. Go to **Project Settings** → **Domains**
+2. Add your custom domain
+3. Update DNS records as instructed
+4. Vercel automatically provisions SSL certificates
+
+## Next Steps
+
+- Configure [environment variables](/deployment/configuration#environment-variables) if needed
+- Review [build configuration](/deployment/configuration) options
+- Set up [monitoring and analytics](https://vercel.com/docs/analytics)

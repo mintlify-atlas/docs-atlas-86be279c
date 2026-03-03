@@ -1,0 +1,437 @@
+---
+title: Blog system
+description: Blog listing page, individual post pages, and markdown blog post system
+---
+
+## Overview
+
+The Lake Ozark Christian Church blog system consists of a blog listing page, dynamic individual post pages, and a collection of markdown blog posts. The system uses Astro's content collections for efficient static generation.
+
+## File structure
+
+```
+src/
+├── pages/
+│   └── blog/
+│       ├── index.astro          # Blog listing page
+│       └── [ID].astro           # Individual post template
+└── blogs/
+    ├── 1.md                     # Blog post 1
+    ├── 2.md                     # Blog post 2
+    ├── 3.md                     # Blog post 3
+    └── 4.md                     # Blog post 4
+```
+
+## Blog listing page
+
+**File**: `src/pages/blog/index.astro`
+
+### Blog post loading
+
+Uses Astro's `import.meta.glob` for markdown files:
+
+```astro
+const postsGlob = import.meta.glob('../../blogs/*.md', { eager: true });
+const posts = Object.values(postsGlob) as any[];
+```
+
+### Post processing
+
+```astro
+const sortedPosts = posts
+  .filter(post => post.frontmatter && post.frontmatter.id)
+  .map(post => {
+    const wordCount = post.rawContent().split(/\s+/).length;
+    const readingTime = Math.ceil(wordCount / 200);
+    return {
+      ...post,
+      calculatedReadingTime: readingTime,
+      calculatedAuthorImage: post.frontmatter?.authorImage || 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png'
+    };
+  })
+  .sort((a, b) => {
+    return (b.frontmatter?.id || 0) - (a.frontmatter?.id || 0);
+  });
+```
+
+**Processing steps:**
+1. Filter posts with valid frontmatter and ID
+2. Calculate reading time (200 words per minute)
+3. Set default author image if not provided
+4. Sort by ID (newest first)
+
+### Hero section
+
+```astro
+<section class="relative overflow-hidden bg-white">
+  <div class="absolute inset-0">
+    <img src="https://usercontent.donorkit.io/clients/LOCC/6408A096-4585-4540-806B-66A6EB4027D7.jpeg" 
+         alt="Church interior" />
+    <div class="absolute inset-0 bg-black/40"></div>
+  </div>
+  
+  <div class="relative container mx-auto px-6 py-32 md:py-40">
+    <!-- Breadcrumbs -->
+    <!-- Title and description -->
+    <!-- CTAs -->
+  </div>
+</section>
+```
+
+### Breadcrumb navigation
+
+```astro
+const breadcrumbs = [
+  { name: 'Home', href: '/' },
+  { name: 'Blog', href: '/blog', current: true }
+];
+```
+
+### Blog posts grid
+
+```astro
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+  {sortedPosts.map((post, index) => (
+    <div class="post-item" style={index >= 6 ? "display: none;" : ""}>
+      <article class="group bg-white rounded-xl overflow-hidden hover:shadow-lg transition-all">
+        <a href={`/blog/${post.frontmatter?.id}`}>
+          <!-- Latest badge for first post -->
+          {index === 0 && (
+            <div class="absolute top-4 right-4 bg-brand text-white px-3 py-1.5 rounded-full text-xs font-semibold z-10 shadow-lg">
+              LATEST
+            </div>
+          )}
+          
+          <!-- Post image -->
+          <img src={post.frontmatter?.image} 
+               class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-105" />
+          
+          <!-- Post content -->
+          <div class="p-6">
+            <div class="flex items-center gap-3 text-sm text-gray-500 mb-3">
+              <time>{formatDate(post.frontmatter?.date)}</time>
+              <span>·</span>
+              <span>{post.calculatedReadingTime} min read</span>
+            </div>
+            <h3 class="text-xl font-semibold mb-3 text-gray-900 group-hover:text-brand">
+              {post.frontmatter?.title}
+            </h3>
+            <p class="text-gray-600 line-clamp-3">
+              {post.frontmatter?.excerpt}
+            </p>
+          </div>
+        </a>
+      </article>
+    </div>
+  ))}
+</div>
+```
+
+### View more functionality
+
+Initially shows 6 posts with expand/collapse:
+
+```javascript
+function setupPostGrid() {
+  const viewMoreBtn = document.getElementById('view-more-btn');
+  const posts = Array.from(document.querySelectorAll('.post-item') || []);
+  let expanded = false;
+
+  if (!viewMoreBtn || posts.length <= 6) return;
+
+  viewMoreBtn.addEventListener('click', () => {
+    if (!expanded) {
+      posts.slice(6).forEach(post => {
+        post.style.display = 'block';
+        post.style.opacity = '0';
+        requestAnimationFrame(() => {
+          post.style.transition = 'opacity 0.3s ease-in-out';
+          post.style.opacity = '1';
+        });
+      });
+      viewMoreBtn.textContent = 'Show Less';
+    } else {
+      posts.slice(6).forEach(post => {
+        post.style.display = 'none';
+      });
+      viewMoreBtn.textContent = 'View More Posts';
+    }
+    expanded = !expanded;
+  });
+}
+```
+
+### Newsletter subscription section
+
+```astro
+const mailchimpSignupUrl = "https://lakeozarkdisciples.us7.list-manage.com/subscribe?u=9816d09f0ebdd5f8ce1af28b4&id=b26607b7c1";
+const mailchimpArchiveUrl = "https://us7.campaign-archive.com/home/?u=9816d09f0ebdd5f8ce1af28b4&id=b26607b7c1";
+
+<section>
+  <h2>Subscribe to Lake Chimes</h2>
+  <p>Get Lake Chimes delivered directly to your inbox each month...</p>
+  
+  <div class="flex flex-col sm:flex-row gap-4">
+    <a href={mailchimpSignupUrl} target="_blank">Subscribe Now</a>
+    <a href={mailchimpArchiveUrl} target="_blank">View Archive</a>
+  </div>
+  
+  <!-- Benefits list -->
+  <ul>
+    <li>Monthly Chimes Newsletters</li>
+    <li>Event notifications and updates</li>
+    <li>General church information</li>
+    <li>Friday Worship Teasers</li>
+  </ul>
+</section>
+```
+
+## Individual blog post page
+
+**File**: `src/pages/blog/[ID].astro`
+
+### Static path generation
+
+```astro
+export const prerender = true;
+
+export const getStaticPaths = (async () => {
+  const postsGlob = import.meta.glob('../../blogs/*.md', { eager: true });
+  const posts = Object.values(postsGlob) as any[];
+
+  return posts.map((post) => {
+    const wordCount = post.rawContent().split(/\s+/).length;
+    const readingTime = Math.ceil(wordCount / 200);
+
+    return {
+      params: { ID: post.frontmatter.id.toString() },
+      props: {
+        post: {
+          frontmatter: {
+            ...post.frontmatter,
+            readingTime,
+            authorImage: post.frontmatter.authorImage || 'https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png'
+          },
+          Content: post.Content,
+          rawContent: post.rawContent,
+        },
+      },
+    };
+  });
+}) satisfies GetStaticPaths;
+```
+
+### Props interface
+
+```typescript
+interface Props {
+  post: {
+    frontmatter: {
+      id: number;
+      title: string;
+      date: string;
+      image?: string;
+      excerpt: string;
+      author?: string;
+      authorRole?: string;
+      authorImage?: string;
+      location?: string;
+      readingTime?: number;
+    };
+    Content: any;
+    rawContent: () => string;
+  };
+}
+```
+
+### Hero section
+
+Post-specific hero with breadcrumbs:
+
+```astro
+const breadcrumbs = [
+  { name: 'Home', href: '/' },
+  { name: 'Blog', href: '/blog' },
+  { name: post.frontmatter.title, href: `/blog/${post.frontmatter.id}`, current: true },
+];
+
+<section class="relative overflow-hidden bg-white">
+  <div class="absolute inset-0">
+    <img src={post.frontmatter.image} alt={post.frontmatter.title} />
+    <div class="absolute inset-0 bg-black/40"></div>
+  </div>
+  
+  <div class="relative container mx-auto px-6 py-32 md:py-40">
+    <!-- Breadcrumb navigation -->
+    
+    <!-- Post metadata -->
+    <div class="flex flex-wrap items-center gap-4 text-white/90 mb-6 text-sm">
+      <time>{formatDate(post.frontmatter.date)}</time>
+      <span>·</span>
+      <span>{post.frontmatter.readingTime} min read</span>
+      {post.frontmatter.location && (
+        <><span>·</span><span>{post.frontmatter.location}</span></>
+      )}
+    </div>
+    
+    <!-- Title and excerpt -->
+    <h1>{post.frontmatter.title}</h1>
+    <p>{post.frontmatter.excerpt}</p>
+  </div>
+</section>
+```
+
+### Author info card
+
+```astro
+<div class="bg-gray-50 rounded-xl p-6 mb-12 border border-gray-200">
+  <div class="flex items-center gap-4">
+    <img src={post.frontmatter.authorImage}
+         alt={post.frontmatter.author}
+         class="w-14 h-14 rounded-full object-cover ring-2 ring-white"
+         onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png'" />
+    <div>
+      <div class="font-semibold text-gray-900 text-lg">
+        {post.frontmatter.author || '[Unknown Author]'}
+      </div>
+      <div class="text-sm text-gray-600">
+        {post.frontmatter.authorRole || '[Content Writer for LOCC]'}
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### Post content rendering
+
+```astro
+<div class="prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-brand">
+  <Content />
+</div>
+```
+
+### Share section
+
+```astro
+<div class="mt-16 pt-12 border-t border-gray-200">
+  <SharePost title={post.frontmatter.title} postId={post.frontmatter.id} />
+</div>
+```
+
+### Prose styling
+
+Custom Tailwind prose styles:
+
+```css
+.prose img {
+  @apply mx-auto my-8 rounded-lg shadow-lg;
+}
+
+.prose a {
+  @apply transition-colors duration-200 text-brand hover:text-brand/80;
+}
+
+/* Lists disabled */
+.prose ul, .prose ol {
+  @apply hidden;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-brand bg-gray-50 py-2 px-4 italic;
+}
+
+.prose h1 {
+  @apply text-4xl font-bold mb-6;
+}
+
+.prose h2 {
+  @apply text-3xl font-semibold mb-4;
+}
+```
+
+## Blog post markdown format
+
+**Example**: `src/blogs/1.md`
+
+### Frontmatter structure
+
+```yaml
+---
+id: "1"
+title: "Game Day & Farewell: Join Us in Wishing the Wiltshires Well"
+date: "2025-01-07T12:00:00Z"
+image: "https://mcusercontent.com/9816d09f0ebdd5f8ce1af28b4/images/9227f4f8-efa4-fbfb-291c-c236c91902e5.jpg"
+excerpt: "Join us for a special Game Day this Friday as we bid farewell to Tom and Cindy Wiltshire before their move."
+author: "Lake Ozark Christian Church"
+authorRole: "Website Administrator"
+authorImage: ""
+location: "Lake Ozark, MO"
+---
+```
+
+### Content formatting
+
+```markdown
+# Special Game Day & Farewell Gathering
+
+---
+Join us for a bittersweet Game Day as we gather to enjoy fellowship...
+
+<br>
+<br>
+
+---
+<br>
+
+## Event Details
+
+**Date:** Friday, January 17th
+<br>
+**Time:** 1:00 PM
+<br>
+**Location:** Fellowship Hall
+```
+
+**Note**: Lists are disabled in the prose styling, so content uses line breaks and formatting instead.
+
+## Utility functions
+
+### Date formatting
+
+```javascript
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  } catch {
+    return 'Date unavailable';
+  }
+}
+```
+
+### Reading time calculation
+
+```javascript
+const wordCount = post.rawContent().split(/\s+/).length;
+const readingTime = Math.ceil(wordCount / 200); // 200 words per minute
+```
+
+## Components used
+
+- `Layout` - Page wrapper
+- `SharePost` - Social sharing component
+
+## UTM tracking
+
+Blog links include tracking parameters:
+
+```astro
+href={`/blog/${post.frontmatter?.id}?utm_source=lakeozarkdisciples&utm_medium=blog_index&utm_campaign=list&utm_content=${post.frontmatter?.id}`}
+```
+
+## Related pages
+
+- [Home page](/pages/home) - Displays recent blog posts

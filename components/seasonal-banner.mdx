@@ -1,0 +1,406 @@
+---
+title: SeasonalBanner Component
+description: Automatic liturgical season banners with countdown timers and dynamic messaging
+---
+
+The `SeasonalBanner` component automatically displays banners for liturgical seasons and holidays using a liturgical calendar utility. It includes countdown timers, seasonal colors, and dynamic messaging.
+
+## Features
+
+- **Automatic Detection**: Uses liturgical calendar to determine current season
+- **Countdown Timers**: Shows days until major holidays
+- **Dynamic Colors**: Season-appropriate background colors
+- **Seasonal Icons**: Emojis for visual appeal
+- **Responsive Design**: Mobile and desktop optimized
+- **Auto-refresh**: Updates hourly to catch date changes
+- **Client-Side Rendering**: Always shows current date/countdown
+
+## Installation
+
+```astro
+import SeasonalBanner from '../components/SeasonalBanner.astro';
+```
+
+## Usage
+
+From `src/layouts/Layout.astro:249`:
+
+```astro
+---
+import SeasonalBanner from '../components/SeasonalBanner.astro';
+---
+
+<Header />
+<SeasonalBanner />
+<main>
+  <slot />
+</main>
+```
+
+## Props
+
+This component does not accept any props. All behavior is automatic based on the current date and liturgical calendar.
+
+## Liturgical Calendar Integration
+
+The component imports calendar utilities:
+
+```typescript
+import { getSeasonalBannerConfig } from '../utils/liturgicalCalendar';
+```
+
+This utility returns configuration based on the current date:
+
+```typescript
+interface SeasonalBannerConfig {
+  season: string;        // e.g., "Advent", "Christmas", "Lent"
+  color: string;         // Background color (hex or rgb)
+  icon?: string;         // Emoji icon
+  message?: string;      // Optional message text
+  countdown?: {
+    days: number;        // Days until holiday
+    holiday: string;     // Holiday name
+  };
+}
+```
+
+## Example Configurations
+
+### Advent (with countdown)
+
+```javascript
+{
+  season: "Advent",
+  color: "#1e3a8a",      // Dark blue
+  icon: "🕯️",
+  countdown: {
+    days: 12,
+    holiday: "Christmas"
+  }
+}
+```
+
+**Renders as:**
+```
+🕯️ It's Advent, there are 12 days until Christmas!
+```
+
+### Christmas (no countdown)
+
+```javascript
+{
+  season: "Christmas",
+  color: "#dc2626",      // Red
+  icon: "🎄",
+  message: "Merry Christmas from your LOCC family!"
+}
+```
+
+**Renders as:**
+```
+🎄 Christmas: Merry Christmas from your LOCC family!
+```
+
+### Ordinary Time
+
+```javascript
+{
+  season: "Ordinary Time",
+  color: "#16a34a",      // Green
+  icon: "✝️"
+}
+```
+
+**Renders as:**
+```
+✝️ Ordinary Time
+```
+
+## Display Logic
+
+### With Countdown
+
+```javascript
+const getDisplayMessage = () => {
+  if (bannerConfig.countdown) {
+    const daysText = bannerConfig.countdown.days === 1 
+      ? 'is 1 day' 
+      : `are ${bannerConfig.countdown.days} days`;
+    
+    return `It's ${bannerConfig.season}, there ${daysText} until ${bannerConfig.countdown.holiday}!`;
+  }
+  // ...
+};
+```
+
+**Examples:**
+- `"It's Advent, there are 10 days until Christmas!"`
+- `"It's Holy Week, there is 1 day until Easter!"`
+
+### With Message
+
+```javascript
+if (bannerConfig.message) {
+  return bannerConfig.message.replace(/\s*from your LOCC family!?/i, '').trim();
+}
+```
+
+Strips "from your LOCC family" for cleaner display.
+
+### Mobile vs. Desktop
+
+```javascript
+const getMobileMessage = () => {
+  if (bannerConfig.countdown) {
+    return `${bannerConfig.countdown.days} days until ${bannerConfig.countdown.holiday}!`;
+  }
+  
+  if (bannerConfig.message) {
+    const cleaned = bannerConfig.message.replace(/\s*from your LOCC family!?/i, '').trim();
+    return cleaned.length > 30 ? cleaned.substring(0, 27) + '...' : cleaned;
+  }
+};
+```
+
+**Mobile Display (< 640px):**
+- Countdown: `"12 days until Christmas!"`
+- Message: Truncated to 30 characters
+
+**Desktop Display (≥ 640px):**
+- Full message with season name
+
+## Text Color Logic
+
+Automatically determines readable text color:
+
+```javascript
+const isLightBackground = 
+  bannerConfig.color.toLowerCase() === '#ffffff' || 
+  bannerConfig.color.toLowerCase() === '#fff' ||
+  bannerConfig.color === 'rgb(255, 255, 255)';
+
+const textColor = isLightBackground ? '#1f2937' : '#ffffff';
+const borderStyle = isLightBackground ? 'border-bottom: 1px solid rgba(0, 0, 0, 0.1);' : '';
+```
+
+**Rules:**
+- Light backgrounds (white): Dark text (#1f2937)
+- Dark backgrounds: White text (#ffffff)
+- Light backgrounds get subtle border
+
+## Banner Rendering
+
+```javascript
+root.innerHTML = `
+  <div 
+    class="seasonal-banner w-full py-2 px-3 md:py-3 md:px-4 text-center font-medium shadow-sm"
+    style="background-color: ${bannerConfig.color}; color: ${textColor}; ${borderStyle}"
+    role="banner"
+    aria-label="${bannerConfig.season} season banner"
+  >
+    <div class="container mx-auto flex items-center justify-center gap-2 md:gap-3">
+      ${iconHTML}
+      <div class="flex items-center justify-center gap-1.5 md:gap-2 min-w-0 flex-wrap">
+        ${contentHTML}
+      </div>
+    </div>
+  </div>
+`;
+```
+
+## Auto-Refresh
+
+Banner updates automatically:
+
+```javascript
+// Update immediately on page load
+updateSeasonalBanner();
+
+// Update hourly to catch date changes
+setInterval(updateSeasonalBanner, 60 * 60 * 1000);
+```
+
+**Why hourly?**
+- Catches midnight date changes
+- Updates countdown numbers
+- Low performance impact
+- Always accurate for current day
+
+## Animation
+
+```css
+.seasonal-banner {
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+```
+
+Smooth slide-in animation on page load.
+
+## Responsive Breakpoints
+
+```css
+@media (max-width: 640px) {
+  .seasonal-banner {
+    line-height: 1.3;
+  }
+}
+```
+
+**Mobile Optimizations:**
+- Shorter message text
+- Tighter line height
+- Hidden desktop content
+- Smaller padding
+
+## Accessibility
+
+- `role="banner"`: Semantic landmark
+- `aria-label`: Describes season
+- `aria-hidden="true"`: Decorative icons
+- High contrast colors
+- Readable font sizes
+
+## Example Seasons
+
+### Church Year Seasons
+
+1. **Advent** (4 weeks before Christmas)
+   - Color: Dark blue
+   - Icon: 🕯️ (candle)
+   - Countdown to Christmas
+
+2. **Christmas** (12 days)
+   - Color: Red or white
+   - Icon: 🎄 (tree)
+   - Message: "Merry Christmas"
+
+3. **Epiphany**
+   - Color: Green or white
+   - Icon: ⭐ (star)
+   - Message varies
+
+4. **Lent** (40 days before Easter)
+   - Color: Purple
+   - Icon: ✝️ (cross)
+   - Countdown to Easter
+
+5. **Holy Week**
+   - Color: Deep purple/red
+   - Icon: ✝️
+   - Countdown to Easter
+
+6. **Easter** (50 days)
+   - Color: White or gold
+   - Icon: 🌅 (sunrise)
+   - Message: "He is Risen!"
+
+7. **Pentecost**
+   - Color: Red
+   - Icon: 🔥 (flame)
+   - Message varies
+
+8. **Ordinary Time**
+   - Color: Green
+   - Icon: ✝️
+   - Default fallback
+
+## Customization
+
+### Add Custom Season
+
+Modify the liturgical calendar utility:
+
+```typescript
+// src/utils/liturgicalCalendar.ts
+export function getSeasonalBannerConfig(date: Date) {
+  // Add custom season
+  if (isWithinRange(date, yourCustomDate, yourCustomEndDate)) {
+    return {
+      season: "VBS Week",
+      color: "#f59e0b",
+      icon: "🎨",
+      message: "Join us for Vacation Bible School!"
+    };
+  }
+  
+  // ... existing seasons
+}
+```
+
+### Change Colors
+
+```typescript
+return {
+  season: "Advent",
+  color: "#3b82f6",  // Lighter blue
+  // ...
+};
+```
+
+### Disable Auto-Refresh
+
+```javascript
+// Comment out this line:
+// setInterval(updateSeasonalBanner, 60 * 60 * 1000);
+```
+
+### Custom Update Frequency
+
+```javascript
+// Update every 30 minutes
+setInterval(updateSeasonalBanner, 30 * 60 * 1000);
+
+// Update every 6 hours
+setInterval(updateSeasonalBanner, 6 * 60 * 60 * 1000);
+```
+
+## Testing
+
+### Test Specific Date
+
+```javascript
+// Override date for testing
+const today = new Date('2026-12-15'); // Advent
+const normalizedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+```
+
+### Test Countdown Logic
+
+```javascript
+const testConfig = {
+  season: "Test",
+  color: "#000",
+  countdown: { days: 1, holiday: "Easter" }
+};
+// Should show "is 1 day" not "are 1 days"
+```
+
+## Performance
+
+- Client-side rendering only
+- Minimal DOM updates
+- Cached calculations
+- No external API calls
+- Lightweight JavaScript
+
+## Related Components
+
+- **Layout**: Where SeasonalBanner is included
+- **WeatherBanner**: Emergency announcements
+- **AlertBanner**: Important notices
+
+## Related Files
+
+- `src/utils/liturgicalCalendar.ts`: Season calculation logic
+- `src/layouts/Layout.astro`: Where component is used

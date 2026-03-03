@@ -1,0 +1,362 @@
+---
+title: Configuration
+description: Complete configuration reference for the Lake Ozark Christian Church Astro website deployment
+---
+
+This page documents all configuration files and settings for the Lake Ozark Christian Church website.
+
+## Astro Configuration
+
+The main configuration file is `astro.config.mjs` at the project root.
+
+### Complete Configuration
+
+```javascript
+import { defineConfig } from 'astro/config';
+import tailwind from '@astrojs/tailwind';
+import react from '@astrojs/react';
+import vercel from '@astrojs/vercel/serverless';
+
+export default defineConfig({
+  // Integrations enable support for external libraries and UI frameworks.
+  integrations: [
+    tailwind(), // Configures and enables Tailwind CSS utility framework.
+    react()     // Enables rendering and usage of React components.
+  ],
+  
+  // Output configuration - use server mode so API routes run at request time
+  output: 'server',
+  
+  // Adapter for Vercel serverless functions
+  adapter: vercel(),
+  
+  // Markdown configuration settings.
+  markdown: {
+    shikiConfig: {
+      // Sets the code highlighting theme for all Markdown and MDX files.
+      theme: 'github-light'
+    }
+  }
+});
+```
+
+### Configuration Breakdown
+
+#### Integrations
+
+The site uses two main integrations:
+
+<AccordionGroup>
+  <Accordion title="@astrojs/tailwind">
+    Enables Tailwind CSS for utility-first styling. Configured in `astro.config.mjs:9`.
+    
+    The integration automatically:
+    - Processes Tailwind directives in CSS files
+    - Applies the configuration from `tailwind.config.mjs`
+    - Enables JIT compilation for faster builds
+    - Purges unused CSS in production builds
+  </Accordion>
+  
+  <Accordion title="@astrojs/react">
+    Enables React component rendering within Astro pages. Configured in `astro.config.mjs:10`.
+    
+    Allows you to:
+    - Import and use React components in `.astro` files
+    - Hydrate React components on the client with `client:*` directives
+    - Share state between React components
+  </Accordion>
+</AccordionGroup>
+
+#### Output Mode
+
+```javascript
+output: 'server'
+```
+
+The `server` output mode enables:
+
+- **Server-side rendering (SSR)** for all pages
+- **API routes** that execute at request time
+- **Dynamic rendering** based on request context
+- **No pre-rendering** unless explicitly configured per-route
+
+This is essential for the `/api/videos.json` and `/api/thumbnail-proxy` endpoints which must run serverless functions.
+
+<Warning>
+  Without `output: 'server'`, API routes would be pre-rendered at build time and wouldn't function as serverless endpoints.
+</Warning>
+
+#### Vercel Adapter
+
+```javascript
+adapter: vercel()
+```
+
+The Vercel serverless adapter (`@astrojs/vercel`) transforms your Astro site for Vercel deployment:
+
+- Converts pages to serverless functions
+- Optimizes static assets
+- Enables edge caching
+- Supports Vercel-specific features (Edge Functions, ISR, etc.)
+
+Installed via:
+
+```bash
+npm install @astrojs/vercel
+```
+
+#### Markdown Configuration
+
+```javascript
+markdown: {
+  shikiConfig: {
+    theme: 'github-light'
+  }
+}
+```
+
+Configures syntax highlighting for code blocks in Markdown/MDX files using the `github-light` theme. This ensures code examples are readable and well-formatted.
+
+## Package Configuration
+
+The `package.json` file defines dependencies and build scripts.
+
+### Dependencies
+
+```json
+{
+  "dependencies": {
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/tailwind": "^5.1.5",
+    "@joycostudio/marquee": "^0.0.13",
+    "@sentry/astro": "^9.46.0",
+    "astro": "^5.16.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.17",
+    "youtube-sr": "^4.3.12",
+    "@astrojs/vercel": "^8.0.0",
+    "path-to-regexp": ">=6.3.0"
+  }
+}
+```
+
+<AccordionGroup>
+  <Accordion title="Core Framework">
+    - **astro** (^5.16.4) - The Astro framework
+    - **@astrojs/vercel** (^8.0.0) - Vercel deployment adapter
+  </Accordion>
+  
+  <Accordion title="UI Integrations">
+    - **@astrojs/react** (^4.4.2) - React integration
+    - **react** / **react-dom** (^18.3.1) - React libraries
+    - **@astrojs/tailwind** (^5.1.5) - Tailwind CSS integration
+    - **tailwindcss** (^3.4.17) - Tailwind CSS framework
+  </Accordion>
+  
+  <Accordion title="Feature Libraries">
+    - **@joycostudio/marquee** (^0.0.13) - Marquee/scrolling text component
+    - **youtube-sr** (^4.3.12) - YouTube search and video fetching (no API key required)
+    - **@sentry/astro** (^9.46.0) - Error tracking and monitoring
+  </Accordion>
+  
+  <Accordion title="Security">
+    - **path-to-regexp** (>=6.3.0) - Security override for path matching
+  </Accordion>
+</AccordionGroup>
+
+### Build Scripts
+
+```json
+{
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  }
+}
+```
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `dev` | `astro dev` | Start development server on `localhost:4321` |
+| `start` | `astro dev` | Alias for `dev` command |
+| `build` | `astro build` | Build production site to `dist/` directory |
+| `preview` | `astro preview` | Preview production build locally |
+| `astro` | `astro` | Run Astro CLI commands |
+
+<Note>
+  Vercel automatically runs `npm run build` during deployment, which executes `astro build`.
+</Note>
+
+## Tailwind Configuration
+
+The `tailwind.config.mjs` file customizes the Tailwind CSS framework.
+
+```javascript
+export default {
+  // Content paths for class name detection and PurgeCSS
+  content: [
+    './src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}',
+  ],
+
+  // Theme customization
+  theme: {
+    extend: {
+      // Custom font family
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      
+      // Custom brand colors
+      colors: {
+        brand: {
+          DEFAULT: '#9e1e3e',  // Main brand color
+          light: '#b84660',    // Lighter shade
+          dark: '#841834',     // Darker shade for hover states
+        }
+      }
+    },
+  },
+
+  plugins: [],
+}
+```
+
+### Key Features
+
+**Content Paths**: Tells Tailwind where to scan for class names. This ensures only used utility classes are included in the final CSS bundle, reducing file size.
+
+**Custom Font**: Sets Inter as the primary sans-serif font with system font fallbacks.
+
+**Brand Colors**: Defines a consistent color palette:
+- `bg-brand` / `text-brand` - Main brand red (#9e1e3e)
+- `bg-brand-light` - Lighter variant (#b84660)
+- `bg-brand-dark` - Darker variant for hover states (#841834)
+
+## TypeScript Configuration
+
+The `tsconfig.json` extends Astro's base TypeScript configuration:
+
+```json
+{
+  "extends": "astro/tsconfigs/base",
+  "compilerOptions": {}
+}
+```
+
+This provides sensible defaults for Astro projects including:
+- Strict type checking
+- Module resolution for Astro components
+- JSX support for React integration
+
+## Environment Variables
+
+Currently, the site does not require environment variables for core functionality.
+
+### YouTube Integration
+
+The `youtube-sr` library used in `/api/videos.json` doesn't require API keys, so no YouTube API credentials are needed.
+
+### Future Environment Variables
+
+If you need to add environment variables:
+
+<Steps>
+  <Step title="Create .env file">
+    Create a `.env` file in the project root:
+    
+    ```bash
+    # .env
+    PUBLIC_SITE_URL=https://your-domain.com
+    SECRET_API_KEY=your-secret-key
+    ```
+  </Step>
+  
+  <Step title="Access in code">
+    Access environment variables using `import.meta.env`:
+    
+    ```typescript
+    const apiKey = import.meta.env.SECRET_API_KEY;
+    const siteUrl = import.meta.env.PUBLIC_SITE_URL;
+    ```
+  </Step>
+  
+  <Step title="Add to Vercel">
+    Add environment variables in Vercel dashboard:
+    
+    1. Go to **Project Settings** → **Environment Variables**
+    2. Add each variable with its value
+    3. Select environment (Production, Preview, Development)
+    4. Redeploy to apply changes
+  </Step>
+</Steps>
+
+<Warning>
+  Variables prefixed with `PUBLIC_` are exposed to the client. Keep sensitive keys without the `PUBLIC_` prefix.
+</Warning>
+
+## API Routes Configuration
+
+API routes require special configuration to run as serverless functions.
+
+### Disable Pre-rendering
+
+Each API route must explicitly disable pre-rendering:
+
+```typescript
+// src/pages/api/videos.json.ts
+export const prerender = false;
+
+export const GET: APIRoute = async () => {
+  // Route logic runs at request time
+};
+```
+
+This ensures the route executes as a serverless function on each request rather than being built once at deploy time.
+
+### Caching Headers
+
+Implement appropriate cache headers for performance:
+
+```typescript
+headers: {
+  'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+}
+```
+
+See the [Vercel deployment guide](/deployment/vercel#performance-features) for caching strategies.
+
+## Build Output
+
+When you run `npm run build`, Astro generates:
+
+```
+dist/
+├── _astro/          # Optimized CSS and JS bundles
+├── _functions/      # Serverless functions (API routes)
+├── index.html       # Static HTML (if any static routes)
+└── ...              # Other static assets
+```
+
+The `dist/` directory is what gets deployed to Vercel.
+
+## Production Optimization
+
+Astro automatically optimizes for production:
+
+- **CSS Minification**: All CSS is minified and bundled
+- **JavaScript Bundling**: Client-side JS is optimized and tree-shaken
+- **Image Optimization**: When using Astro's image components
+- **Asset Hashing**: Cache-busting filenames for static assets
+- **Tailwind Purging**: Unused CSS utilities are removed
+
+No additional configuration required.
+
+## Related Resources
+
+- [Deploy to Vercel](/deployment/vercel) - Step-by-step deployment guide
+- [Astro Configuration Reference](https://docs.astro.build/en/reference/configuration-reference/)
+- [Vercel Adapter Documentation](https://docs.astro.build/en/guides/integrations-guide/vercel/)

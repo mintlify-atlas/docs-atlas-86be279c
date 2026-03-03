@@ -1,0 +1,171 @@
+---
+title: About page
+description: Information about the church's mission, history, and Disciples of Christ affiliation
+---
+
+## Overview
+
+The About page (`about.astro`) provides comprehensive information about Lake Ozark Christian Church's mission, values, and denominational affiliation with the Christian Church (Disciples of Christ).
+
+**File location**: `src/pages/about.astro`
+
+## Page structure
+
+### Hero section
+
+Full-width hero with:
+- Background image of church sanctuary
+- Mission statement: "Dedicated to sharing the Gospel of Jesus Christ"
+- CTA buttons for worship and staff pages
+
+```astro
+const heroImage = {
+  url: "https://usercontent.donorkit.io/clients/LOCC/7767E813-185B-48B7-A7C8-A5C919258FEA%20(1).jpeg",
+  alt: "Church Sanctuary"
+};
+```
+
+### Our story section
+
+**Content highlights:**
+- Faith as a way of life
+- Gospel sharing mission
+- Community dedication
+
+**Key principles:**
+
+```astro
+<div class="bg-gray-50 rounded-xl p-6 space-y-4">
+  <!-- Rooted in scripture -->
+  <!-- Living faith -->
+  <!-- Called to serve -->
+</div>
+```
+
+- **Rooted in scripture** - Word of God for inspiration and guidance
+- **Living faith** - Active God working for peace and justice
+- **Called to serve** - Ministry of Jesus through service
+
+### Our mission section
+
+Focuses on the core calling:
+
+**Mission statement:**
+> "Our Lord calls us out to care for others—to love God and neighbor, and to work for a better world through service, mission, and prophetic witness."
+
+**Featured scripture:**
+
+```astro
+<blockquote class="text-lg italic text-gray-700 mb-3">
+  "To bring Good News to the poor … proclaim release to the captives..."
+</blockquote>
+<p class="text-sm text-gray-600 font-medium">— Luke 4:18-19</p>
+```
+
+### Disciples of Christ section
+
+Explains denominational affiliation:
+
+**Tagline:**
+> "A movement for wholeness in a fragmented world."
+
+**Core values:**
+- **Open Communion** - All are welcome at Christ's table
+- **Unity in Diversity** - Different perspectives united in Christ
+
+**Visual element:**
+- Disciples of Christ chalice logo
+- Link to disciples.org
+
+```astro
+<img 
+  src="https://cdn.disciples.org/wp-content/uploads/2018/02/06162100/DOCCHALICE-Solid-Red-752x1024.png"
+  alt="Disciples of Christ Logo"
+  class="h-32 mx-auto mb-8"
+/>
+```
+
+## Layout pattern
+
+Consistent two-column grid structure:
+
+```astro
+<div class="grid lg:grid-cols-2 gap-16 items-center">
+  <!-- Content column -->
+  <!-- Image column -->
+</div>
+```
+
+## CTAs and links
+
+**Primary actions:**
+- Join Us Sunday → `/worship`
+- Meet our team → `/staff`
+- Learn About Disciples → `https://disciples.org`
+- Meet Our Pastor → `/staff`
+
+**UTM tracking example:**
+
+```astro
+href="/worship?utm_source=lakeozarkdisciples&utm_medium=about_page&utm_campaign=hero&utm_content=join_us_sunday"
+```
+
+## Images used
+
+1. **Hero image** - Church sanctuary interior
+2. **Story section** - Community gathering image
+3. **Mission section** - Worship service image
+4. **Disciples section** - Chalice logo
+
+All images lazy-loaded except hero.
+
+## Typography
+
+Uses Albert Sans font family:
+
+```css
+* {
+  font-family: 'Albert Sans', system-ui, sans-serif;
+}
+```
+
+## Performance optimization
+
+**Hero image preloading:**
+
+```astro
+<link rel="preload" href={heroImage.url} as="image" fetchpriority="high" />
+```
+
+**Loading attributes:**
+- Hero: `fetchpriority="high"` and `loading="eager"`
+- Other images: Default lazy loading
+
+## Design system
+
+**Section badges:**
+
+```astro
+<span class="inline-block px-4 py-2 bg-brand/10 text-brand text-sm font-medium mb-6">
+  Our story
+</span>
+```
+
+**Card components:**
+- Gray background (`bg-gray-50`)
+- Rounded corners (`rounded-xl`)
+- Icon + text layout
+- Consistent spacing
+
+## Content themes
+
+1. **Faith in action** - Living faith vs. passive belief
+2. **Biblical foundation** - Scripture-based teaching
+3. **Community service** - Loving God and neighbor
+4. **Inclusive theology** - Open table, unity in diversity
+
+## Related pages
+
+- [Worship page](/pages/worship) - Service information
+- [Home page](/pages/home) - Main landing page
+- [Programs page](/pages/programs) - Church programs and ministries

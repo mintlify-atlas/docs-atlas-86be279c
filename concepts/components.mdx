@@ -1,0 +1,394 @@
+---
+title: Components
+description: Understand the component architecture in the Lake Ozark Christian Church website
+---
+
+Components are reusable pieces of UI that can be imported and used across multiple pages. The project uses both Astro components (`.astro`) and React components (`.tsx`).
+
+## Component types
+
+The website uses two types of components:
+
+<CardGroup cols={2}>
+  <Card title="Astro components" icon="code">
+    `.astro` files - Server-rendered components with no client-side JavaScript by default
+  </Card>
+  <Card title="React components" icon="react">
+    `.tsx` files - Interactive components with client-side state and event handlers
+  </Card>
+</CardGroup>
+
+## Astro components
+
+Astro components are the primary building blocks. They are rendered on the server and ship zero JavaScript to the client by default.
+
+### Available Astro components
+
+The `src/components/` directory contains:
+
+- `AccessibilityMenu.astro` - Accessibility features menu
+- `AlertBanner.astro` - Site-wide alert banner
+- `AlertSmall.astro` - Compact alert messages
+- `CookieBanner.astro` - Cookie consent banner
+- `DonationForm.astro` - Interactive donation form
+- `ExternalLinkWarning.astro` - Warning for external links
+- `LocationMap.astro` - Embedded map component
+- `LocationPermission.astro` - Location permission prompt
+- `PrayerRequestForm.astro` - Prayer submission form
+- `PrivacyBanner.astro` - Privacy notice banner
+- `SeasonalBanner.astro` - Seasonal announcements
+- `SelfXSS.astro` - Developer console warning
+- `SharePost.astro` - Social sharing buttons
+- `SundayCalendar.astro` - Service schedule calendar
+- `WeatherBanner.astro` - Weather alerts
+
+### Example: Prayer request form
+
+Here's how the `PrayerRequestForm.astro` component is structured:
+
+```astro src/components/PrayerRequestForm.astro
+---
+interface Props {
+  title?: string;
+  description?: string;
+  showAnonymous?: boolean;
+}
+
+const {
+  title = "Prayer Requests",
+  description = "Share your prayer needs with our community.",
+  showAnonymous = true
+} = Astro.props;
+---
+
+<div class="prayer-request-section">
+  <div class="grid lg:grid-cols-2 gap-16 items-start">
+    <div class="bg-gray-50 rounded-2xl p-8">
+      <form id="prayer-request-form" method="POST">
+        <div>
+          <label for="prayer-name">
+            Your Name {showAnonymous && <span>(optional)</span>}
+          </label>
+          <input type="text" id="prayer-name" name="name" />
+        </div>
+        
+        <div>
+          <label for="prayer-request">Prayer Request *</label>
+          <textarea id="prayer-request" name="request" required />
+        </div>
+        
+        <button type="submit">Submit Prayer Request</button>
+      </form>
+    </div>
+    
+    <div>
+      <h2>{title}</h2>
+      <p>{description}</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Client-side form handling
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('prayer-request-form');
+    
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      // Handle form submission
+    });
+  });
+</script>
+```
+
+### Component props
+
+Astro components accept props through the `Astro.props` object:
+
+```astro
+---
+interface Props {
+  title?: string;
+  description?: string;
+  showAnonymous?: boolean;
+}
+
+const { title, description, showAnonymous = true } = Astro.props;
+---
+```
+
+### Using Astro components
+
+Import and use components in your pages:
+
+```astro src/pages/index.astro
+---
+import Layout from '../layouts/Layout.astro';
+import PrayerRequestForm from '../components/PrayerRequestForm.astro';
+import DonationForm from '../components/DonationForm.astro';
+---
+
+<Layout title="Welcome">
+  <section id="prayer">
+    <PrayerRequestForm />
+  </section>
+  
+  <section id="donate">
+    <DonationForm id="homepage" />
+  </section>
+</Layout>
+```
+
+## React components
+
+React components are used for interactive features that require client-side JavaScript.
+
+### Example: Salvation Marquee
+
+The `SalvationMarquee.tsx` component displays scrolling testimonials:
+
+```tsx src/components/SalvationMarquee.tsx
+import { useState } from 'react';
+import { Marquee } from '@joycostudio/marquee/react';
+
+interface Testimony {
+  name: string;
+  quote: string;
+  year?: string;
+}
+
+interface Props {
+  testimonies?: Testimony[];
+}
+
+const defaultTestimonies: Testimony[] = [
+  {
+    name: "Sarah M.",
+    quote: "God's grace transformed my life when I thought all hope was lost.",
+    year: "2023"
+  },
+  // More testimonies...
+];
+
+export default function SalvationMarquee({ testimonies = defaultTestimonies }: Props) {
+  const [isPaused, setIsPaused] = useState(false);
+  const duplicatedTestimonies = [...testimonies, ...testimonies];
+
+  return (
+    <div 
+      className="salvation-marquee-wrapper"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      <Marquee speed={30} direction={-1} play={!isPaused}>
+        {duplicatedTestimonies.map((testimony, index) => (
+          <div key={`${testimony.name}-${index}`} className="mx-3">
+            <p>{testimony.quote}</p>
+            <span>— {testimony.name}</span>
+          </div>
+        ))}
+      </Marquee>
+    </div>
+  );
+}
+```
+
+### Using React components
+
+React components must be explicitly hydrated on the client using directives:
+
+```astro src/pages/index.astro
+---
+import SalvationMarquee from '../components/SalvationMarquee';
+---
+
+<section id="salvation-stories">
+  <SalvationMarquee client:load />
+</section>
+```
+
+<Note>
+The `client:load` directive tells Astro to hydrate this component immediately on page load.
+</Note>
+
+### Client directives
+
+Control when React components load:
+
+<Tabs>
+  <Tab title="client:load">
+    ```astro
+    <SalvationMarquee client:load />
+    ```
+    Loads and hydrates immediately on page load.
+  </Tab>
+  
+  <Tab title="client:idle">
+    ```astro
+    <SalvationMarquee client:idle />
+    ```
+    Loads when the browser is idle.
+  </Tab>
+  
+  <Tab title="client:visible">
+    ```astro
+    <SalvationMarquee client:visible />
+    ```
+    Loads when the component enters the viewport.
+  </Tab>
+  
+  <Tab title="client:only">
+    ```astro
+    <SalvationMarquee client:only="react" />
+    ```
+    Skips server rendering, only renders on client.
+  </Tab>
+</Tabs>
+
+## Component patterns
+
+### Props and TypeScript
+
+Define component props with TypeScript interfaces:
+
+```astro
+---
+interface Props {
+  id?: string;
+  showHeader?: boolean;
+}
+
+const { id = 'donation', showHeader = true } = Astro.props;
+---
+
+<div>
+  {showHeader && <h3>Make a Donation</h3>}
+  <form id={`${id}-form`}>
+    <!-- Form content -->
+  </form>
+</div>
+```
+
+### Client-side scripts
+
+Add interactivity to Astro components with `<script>` tags:
+
+```astro
+<form id="donation-form">
+  <input type="number" class="amount-input" />
+  <button type="submit">Donate</button>
+</form>
+
+<script>
+  const form = document.getElementById('donation-form');
+  const amountInput = form?.querySelector('.amount-input');
+  
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // Handle submission
+  });
+</script>
+```
+
+<Warning>
+Scripts in Astro components run once when the page loads. For components that might be added/removed dynamically, use event delegation or framework components.
+</Warning>
+
+### Conditional rendering
+
+Use JavaScript expressions to conditionally render content:
+
+```astro src/pages/index.astro
+---
+export const prerender = false;
+import { isLocalVisitor } from '../utils/locationCheck';
+
+let isLocal = false;
+try {
+  isLocal = await isLocalVisitor();
+} catch (error) {
+  isLocal = false;
+}
+---
+
+{isLocal ? (
+  <p>Welcome, neighbor!</p>
+) : (
+  <p>Plan Your Visit</p>
+)}
+```
+
+## Component organization
+
+<Steps>
+
+<Step title="Choose the right type">
+- Use **Astro components** for static content and server-rendered UI
+- Use **React components** for interactive features with state
+</Step>
+
+<Step title="Define clear props">
+```astro
+interface Props {
+  title: string;        // Required
+  description?: string; // Optional
+  count?: number;       // Optional with type
+}
+```
+</Step>
+
+<Step title="Import and use">
+```astro
+import MyComponent from '../components/MyComponent.astro';
+
+<MyComponent title="Hello" description="World" />
+```
+</Step>
+
+<Step title="Add interactivity">
+- Astro: Use `<script>` tags for simple interactions
+- React: Use hooks and state for complex UI
+</Step>
+
+</Steps>
+
+## Styling components
+
+Components can include scoped styles:
+
+```astro
+<div class="prayer-form">
+  <!-- Content -->
+</div>
+
+<style>
+  .prayer-form {
+    font-family: 'Albert Sans', system-ui, sans-serif;
+  }
+  
+  /* Styles are scoped to this component */
+</style>
+```
+
+For React components, use className:
+
+```tsx
+export default function SalvationMarquee() {
+  return (
+    <div className="salvation-marquee-wrapper bg-white overflow-hidden">
+      {/* Content */}
+    </div>
+  );
+}
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Layouts" icon="layout" href="/concepts/layouts">
+    Learn about the layout system
+  </Card>
+  <Card title="Pages & routing" icon="map" href="/concepts/pages-routing">
+    Understand Astro's routing
+  </Card>
+</CardGroup>

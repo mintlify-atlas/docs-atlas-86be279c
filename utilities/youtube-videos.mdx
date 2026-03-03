@@ -1,0 +1,418 @@
+---
+title: "YouTube Videos"
+description: "Utility for fetching and processing YouTube video data from the church channel"
+---
+
+The `fetchYouTubeVideos.js` utility provides functions for fetching video data from the Lake Ozark Christian Church YouTube channel, parsing dates from video titles, and managing custom thumbnails.
+
+## Overview
+
+This utility:
+- Fetches videos from the church's YouTube uploads playlist
+- Parses dates from video titles in multiple formats
+- Filters and sorts videos by date
+- Manages custom thumbnail URLs for specific videos
+- Provides fallback data on API failures
+
+**File location**: `~/workspace/source/src/utils/fetchYouTubeVideos.js`
+
+## Exported Functions
+
+### fetchLatestVideos()
+
+Fetches the latest videos from the church YouTube channel, filters for service videos, and returns them sorted by date.
+
+<ParamField path="Returns" type="Promise<Array<VideoData>>">
+  Array of video objects:
+  
+  <ResponseField name="id" type="string">
+    YouTube video ID
+  </ResponseField>
+  
+  <ResponseField name="title" type="string">
+    Full video title from YouTube
+  </ResponseField>
+  
+  <ResponseField name="customThumbnail" type="string" required={false}>
+    Custom thumbnail URL (if configured in customThumbnailMap)
+  </ResponseField>
+</ParamField>
+
+**Example usage:**
+
+```javascript
+import { fetchLatestVideos } from '../../utils/fetchYouTubeVideos.js';
+
+try {
+  const videos = await fetchLatestVideos();
+  
+  videos.forEach(video => {
+    console.log(`ID: ${video.id}`);
+    console.log(`Title: ${video.title}`);
+    if (video.customThumbnail) {
+      console.log(`Custom thumbnail: ${video.customThumbnail}`);
+    }
+  });
+} catch (error) {
+  console.error('Failed to fetch videos:', error);
+}
+```
+
+**Real usage from API endpoint (src/pages/api/videos.json.ts):**
+
+```typescript
+import { fetchLatestVideos } from '../../utils/fetchYouTubeVideos.js';
+
+export const GET: APIRoute = async ({ params, request }) => {
+  try {
+    const videos = await fetchLatestVideos();
+    
+    return new Response(JSON.stringify(videos), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=300, stale-while-revalidate=600`,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching YouTube videos:', error);
+    return new Response(JSON.stringify({ error: 'Failed to fetch videos' }), {
+      status: 500,
+    });
+  }
+};
+```
+
+## Custom Thumbnail Mapping
+
+The utility includes a custom thumbnail map for videos that should use specific thumbnail images instead of YouTube's default:
+
+```javascript
+const customThumbnailMap = {
+  "FIkeDt8Wcqw": "https://cdn.lakeozarkdisciples.org/images/12-29-24.png?raw=true",
+  "jDp0lVpSzWI": "https://cdn.lakeozarkdisciples.org/images/12-24-24.png?raw=true",
+  "1ffwnu_KJIA": "https://cdn.lakeozarkdisciples.org/images/12-15-24.png?raw=true",
+  "fLRG9qGhfi0": "https://cdn.lakeozarkdisciples.org/images/12-8-24.png?raw=true",
+  "I6DtUm7hjlI": "https://cdn.lakeozarkdisciples.org/images/The%20Courage%20of%20Faith.png?raw=true",
+  "b8lPbrYl3O4": "https://cdn.lakeozarkdisciples.org/images/More%20Than%20Enough.png?raw=true",
+  // ... more mappings
+};
+```
+
+**Adding custom thumbnails:**
+
+1. Upload thumbnail to CDN: `https://cdn.lakeozarkdisciples.org/images/`
+2. Add video ID and thumbnail URL to `customThumbnailMap`
+3. Video will automatically use custom thumbnail when fetched
+
+## Date Parsing
+
+The utility includes a sophisticated date parser that handles multiple title formats:
+
+### Supported Date Formats
+
+| Format | Example | Pattern |
+|--------|---------|----------|
+| Compact MMDDYY | "103022" | 6-digit number |
+| Compact MDDYY | "10322" | 5-digit number |
+| Slash format | "10/30/22" | MM/DD/YY or MM/DD/YYYY |
+| Dash format | "10-30-22" | MM-DD-YY or MM-DD-YYYY |
+| Full month | "October 30, 2022" | Month DD, YYYY |
+| Full month (no comma) | "October 30 2022" | Month DD YYYY |
+| Ordinal suffix | "October 30th, 2022" | Month DDth, YYYY |
+| Abbreviated month | "Oct 30, 2022" | Mon DD, YYYY |
+
+### parseDateFromTitle() (Internal)
+
+While not exported, this internal function is crucial for video sorting:
+
+```javascript
+function parseDateFromTitle(title) {
+  // Remove service prefixes
+  const cleanTitle = title
+    .replace(/^(Service|LOCC|Church Service)\s*[-|]\s*/i, '')
+    .replace(/\s*[-|]\s*(Service)$/i, '');
+  
+  // Try multiple patterns...
+  // Returns Date object or null
+}
+```
+
+**Example title parsing:**
+
+```javascript
+// These titles all parse to the same date:
+"LOCC | October 30, 2022 | Sermon Title"
+"Service - 10/30/22 - Sermon Title"
+"103022 Sermon Title"
+"Church Service | Oct 30th, 2022"
+
+// All parse to: new Date(2022, 9, 30)  // Month is 0-indexed
+```
+
+## Video Filtering
+
+Videos are filtered to include only church service videos:
+
+```javascript
+const filteredVideos = playlist.videos.filter(video => {
+  const title = video.title.toLowerCase();
+  const isServiceVideo = title.includes('service') || title.includes('locc');
+  const isNotExcluded = !excludedVideoIds.includes(video.id);
+  return isServiceVideo && isNotExcluded;
+});
+```
+
+**Excluded videos:**
+
+```javascript
+const excludedVideoIds = ['-29vYs8MAhc'];
+```
+
+Add video IDs to this array to exclude specific videos from the list.
+
+## Video Sorting
+
+Videos are sorted by parsed date (most recent first):
+
+```javascript
+const sortedVideos = videosWithDates.sort((a, b) => {
+  if (a.parsedDate && b.parsedDate) {
+    return b.parsedDate - a.parsedDate;  // Newest first
+  }
+  if (a.parsedDate && !b.parsedDate) return -1;  // Parsed dates first
+  if (!a.parsedDate && b.parsedDate) return 1;
+  return 0;  // Keep original order if neither has date
+});
+```
+
+## YouTube API Integration
+
+The utility uses the `youtube-sr` package to fetch videos:
+
+```javascript
+import { YouTube } from 'youtube-sr';
+
+const uploadsPlaylistId = 'UUUcLKfZo5Su6-ypmt1dkPKA';
+const playlistUrl = `https://www.youtube.com/playlist?list=${uploadsPlaylistId}`;
+
+// Fetch with fallback pagination
+try {
+  playlist = await YouTube.getPlaylist(playlistUrl, { fetchAll: true });
+} catch (fetchAllError) {
+  // Fallback: Manual pagination
+  playlist = await YouTube.getPlaylist(playlistUrl);
+  if (playlist && playlist.fetch) {
+    await playlist.fetch();
+  }
+}
+```
+
+**Playlist ID**: `UUUcLKfZo5Su6-ypmt1dkPKA` (Church uploads)
+
+## Error Handling & Fallback
+
+The utility includes comprehensive error handling:
+
+```javascript
+export async function fetchLatestVideos() {
+  try {
+    // Fetch and process videos...
+    return videos;
+  } catch (error) {
+    console.error('Error fetching YouTube videos:', error);
+    return getFallbackVideos();
+  }
+}
+
+function getFallbackVideos() {
+  return [];  // Empty array as fallback
+}
+```
+
+**On error:**
+- Logs error to console
+- Returns empty array (graceful degradation)
+- Allows page to render without videos
+
+## Processing Pipeline
+
+Here's the complete video processing flow:
+
+```javascript
+export async function fetchLatestVideos() {
+  // 1. Fetch playlist from YouTube
+  const playlist = await YouTube.getPlaylist(playlistUrl, { fetchAll: true });
+  
+  // 2. Filter for service videos
+  const filteredVideos = playlist.videos.filter(video => {
+    return title.includes('service') || title.includes('locc');
+  });
+  
+  // 3. Parse dates and add custom thumbnails
+  const videosWithDates = filteredVideos.map(video => {
+    const parsedDate = parseDateFromTitle(video.title);
+    const videoData = {
+      id: video.id,
+      title: video.title,
+      parsedDate: parsedDate
+    };
+    
+    if (customThumbnailMap[video.id]) {
+      videoData.customThumbnail = customThumbnailMap[video.id];
+    }
+    
+    return videoData;
+  });
+  
+  // 4. Sort by date (newest first)
+  const sortedVideos = videosWithDates.sort((a, b) => {
+    return b.parsedDate - a.parsedDate;
+  });
+  
+  // 5. Remove parsedDate (internal only)
+  const videos = sortedVideos.map(({ parsedDate, ...video }) => video);
+  
+  return videos;
+}
+```
+
+## API Endpoint Implementation
+
+The utility is typically used in an API endpoint with caching:
+
+```typescript
+// src/pages/api/videos.json.ts
+import type { APIRoute } from 'astro';
+import { fetchLatestVideos } from '../../utils/fetchYouTubeVideos.js';
+
+export const prerender = false;
+
+const CACHE_MAX_AGE = 300; // 5 minutes
+const STALE_WHILE_REVALIDATE = 600; // 10 minutes
+
+export const GET: APIRoute = async ({ params, request }) => {
+  try {
+    const videos = await fetchLatestVideos();
+    
+    return new Response(JSON.stringify(videos), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=${CACHE_MAX_AGE}, stale-while-revalidate=${STALE_WHILE_REVALIDATE}`,
+      },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to fetch videos' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+    });
+  }
+};
+```
+
+**Caching strategy:**
+- 5-minute cache (max-age)
+- 10-minute stale-while-revalidate
+- Reduces YouTube API calls
+- Improves performance
+
+## Client-Side Usage
+
+Fetch videos from the API endpoint:
+
+```javascript
+async function loadVideos() {
+  try {
+    const response = await fetch('/api/videos.json');
+    const videos = await response.json();
+    
+    videos.forEach(video => {
+      renderVideo(video);
+    });
+  } catch (error) {
+    console.error('Failed to load videos:', error);
+  }
+}
+```
+
+## Return Value Structure
+
+**Example return value:**
+
+```javascript
+[
+  {
+    id: "FIkeDt8Wcqw",
+    title: "LOCC | December 29, 2024 | Sermon Title | Rev. Lina Eddy",
+    customThumbnail: "https://cdn.lakeozarkdisciples.org/images/12-29-24.png?raw=true"
+  },
+  {
+    id: "jDp0lVpSzWI",
+    title: "Service - 12/24/24 - Christmas Eve Service",
+    customThumbnail: "https://cdn.lakeozarkdisciples.org/images/12-24-24.png?raw=true"
+  },
+  {
+    id: "abc123xyz",
+    title: "LOCC | December 15, 2024 | Another Sermon"
+    // No customThumbnail - will use YouTube default
+  }
+]
+```
+
+## Testing Notes
+
+The code includes a commented-out dummy video for testing:
+
+```javascript
+// Add dummy 2026 video for testing the new design
+const dummy2026Video = {
+  id: 'dummy-2026-test',
+  title: 'LOCC | December 25, 2026 | Your Light Has Come! | Rev. Lina Eddy',
+};
+
+// Insert dummy video at the beginning (most recent)
+// videos.unshift(dummy2026Video);
+```
+
+Uncomment to test with future-dated content.
+
+## Dependencies
+
+**Required packages:**
+
+```json
+{
+  "youtube-sr": "^4.3.4"
+}
+```
+
+Install with:
+
+```bash
+npm install youtube-sr
+```
+
+## Performance Considerations
+
+1. **API Caching**: Use the API endpoint pattern with cache headers
+2. **Fallback Data**: Always return empty array on error (graceful degradation)
+3. **Pagination Fallback**: Manual fetch() if fetchAll fails
+4. **Date Parsing**: Efficient regex patterns, stops at first match
+
+## Maintenance
+
+**Regular tasks:**
+
+1. **Update custom thumbnails**: Add new video IDs to `customThumbnailMap`
+2. **Exclude videos**: Add IDs to `excludedVideoIds` array
+3. **Monitor errors**: Check console logs for API failures
+4. **Update playlist ID**: If channel uploads playlist changes
+
+**Playlist ID format:**
+- Channel ID starts with `UC`
+- Uploads playlist: Replace `UC` with `UU`
+- Example: `UCUcLKfZo5Su6-ypmt1dkPKA` → `UUUcLKfZo5Su6-ypmt1dkPKA`

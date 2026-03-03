@@ -1,0 +1,330 @@
+---
+title: Giving page
+description: Online donation functionality and alternative giving methods
+---
+
+## Overview
+
+The Giving page (`giving.astro`) provides a comprehensive online donation system with multiple giving options, security features, and impact information. It includes an embedded donation form powered by Stripe.
+
+**File location**: `src/pages/giving.astro`
+
+## Components used
+
+```astro
+import Layout from '../layouts/Layout.astro';
+import DonationForm from '../components/DonationForm.astro';
+```
+
+- `Layout` - Page wrapper
+- `DonationForm` - Interactive donation form component
+
+## Data structures
+
+### Giving methods
+
+```astro
+const givingMethods = [
+  {
+    title: "Online Giving",
+    description: "Secure online donations with one-time or monthly giving options.",
+    icon: `<path.../>` // SVG path for credit card icon
+  },
+  {
+    title: "Mail Your Gift",
+    description: "Send your contribution to P.O. Box 194, Lake Ozark, MO 65049.",
+    icon: `<path.../>` // SVG path for mail icon
+  },
+  {
+    title: "In-Person Giving",
+    description: "Place your gift in the offering plate during Sunday service.",
+    icon: `<path.../>` // SVG path for cash icon
+  }
+];
+```
+
+### Impact areas
+
+```astro
+const impactAreas = [
+  {
+    title: "Local Ministries",
+    description: "Supporting our community through various outreach programs.",
+    icon: `<path.../>`
+  },
+  {
+    title: "Youth Programs",
+    description: "Investing in the next generation through education and spiritual growth.",
+    icon: `<path.../>`
+  },
+  {
+    title: "Building & Maintenance",
+    description: "Maintaining our facilities for worship and community gatherings.",
+    icon: `<path.../>`
+  },
+  {
+    title: "Mission Support",
+    description: "Extending our reach through global missions and partnerships.",
+    icon: `<path.../>`
+  }
+];
+```
+
+## Page sections
+
+### Hero section
+
+Minimalist hero with sanctuary image:
+
+```astro
+const heroImage = {
+  url: "https://usercontent.donorkit.io/clients/LOCC/7767E813-185B-48B7-A7C8-A5C919258FEA%20(1).jpeg",
+  alt: "Church Sanctuary"
+};
+```
+
+**Messaging:**
+- "Support Our Ministry"
+- "Giving"
+- "Supporting our ministry through faithful stewardship"
+
+**CTAs:**
+```astro
+<a href="#donate">Give Now</a>
+<a href="#ways-to-give">Other Ways to Give</a>
+```
+
+### Online donation section
+
+Two-column layout with sticky content:
+
+```astro
+<div class="grid lg:grid-cols-2 gap-16 items-start">
+  <!-- Left: Sticky info -->
+  <div class="lg:sticky lg:top-8">
+    <h2>Give Online</h2>
+    <p>Make a secure donation with flexible giving options...</p>
+  </div>
+  
+  <!-- Right: Form -->
+  <div>
+    <DonationForm id="giving" />
+  </div>
+</div>
+```
+
+**Trust indicators:**
+
+```astro
+<div class="space-y-4 mb-8">
+  <div class="flex items-start gap-3">
+    <div class="w-8 h-8 rounded-lg bg-brand/10 flex items-center justify-center">
+      <svg><!-- Lock icon --></svg>
+    </div>
+    <div>
+      <p class="font-medium text-gray-900">Secure & Encrypted</p>
+      <p class="text-sm text-gray-500">All donations processed through Stripe</p>
+    </div>
+  </div>
+  <!-- Tax Deductible -->
+  <!-- Cancel Anytime -->
+</div>
+```
+
+**Features highlighted:**
+1. **Secure & Encrypted** - Stripe processing
+2. **Tax Deductible** - Official receipts
+3. **Cancel Anytime** - Manage at donork.it/locc
+
+### Ways to give section
+
+Grid of giving methods:
+
+```astro
+<div class="grid md:grid-cols-3 gap-6">
+  {givingMethods.map(method => (
+    <div class="bg-white p-6 rounded-lg border border-gray-200 hover:border-gray-300 transition-all">
+      <div class="w-10 h-10 bg-brand/10 rounded-lg flex items-center justify-center mb-4">
+        <svg class="w-5 h-5 text-brand">
+          <Fragment set:html={method.icon} />
+        </svg>
+      </div>
+      <h3>{method.title}</h3>
+      <p>{method.description}</p>
+    </div>
+  ))}
+</div>
+```
+
+**Mailing address provided:**
+> P.O. Box 194, Lake Ozark, MO 65049
+
+### Questions section
+
+Contact information for giving questions:
+
+```astro
+<h2>Questions About Giving?</h2>
+<p>We're here to help. Contact our church office for any questions...</p>
+
+<div class="flex flex-col sm:flex-row gap-3 justify-center">
+  <a href="tel:573-365-3366">573-365-3366</a>
+  <a href="mailto:office@lakeozarkdisciples.org">Send Email</a>
+</div>
+```
+
+## Toast notification system
+
+Global toast functions for donation feedback:
+
+```javascript
+function showToast(message: string, type: 'success' | 'error' | 'info' | 'warning' = 'info', duration: number = 5000): string {
+  const container = document.getElementById('toast-container');
+  
+  const toast = document.createElement('div');
+  toast.className = `${colorMap[type]} border rounded-lg p-4 shadow-lg max-w-sm toast-enter`;
+  // ... toast creation logic
+  
+  return toastId;
+}
+
+function removeToast(toastId: string) {
+  const toast = document.getElementById(toastId);
+  toast.classList.add('toast-exit');
+  // ... removal logic
+}
+
+// Make globally available for DonationForm
+(window as any).showToast = showToast;
+(window as any).removeToast = removeToast;
+```
+
+### Toast types
+
+```javascript
+const iconMap = {
+  success: `<svg><!-- Checkmark --></svg>`,
+  error: `<svg><!-- X --></svg>`,
+  warning: `<svg><!-- Triangle --></svg>`,
+  info: `<svg><!-- Info circle --></svg>`
+};
+
+const colorMap = {
+  success: 'bg-green-50 border-green-200 text-green-800',
+  error: 'bg-red-50 border-red-200 text-red-800', 
+  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+  info: 'bg-blue-50 border-blue-200 text-blue-800'
+};
+```
+
+## Toast animations
+
+```css
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.toast-enter {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.toast-exit {
+  animation: slideOutToRight 0.3s ease-in;
+}
+```
+
+## Toast container
+
+```astro
+<div id="toast-container" class="fixed top-4 right-4 z-[150] space-y-2"></div>
+```
+
+Positioned fixed in top-right corner with high z-index.
+
+## DonationForm integration
+
+The embedded form component handles:
+- Amount selection
+- Recurring gift options
+- Payment processing via Stripe
+- Success/error notifications using toast system
+
+```astro
+<DonationForm id="giving" />
+```
+
+See [DonationForm component](/components/donation-form) for details.
+
+## Design features
+
+### Sticky sidebar
+
+Left column stays visible during scroll:
+
+```astro
+<div class="lg:sticky lg:top-8">
+  <!-- Content info -->
+</div>
+```
+
+### Card hover effects
+
+```astro
+<div class="bg-white p-6 rounded-lg border border-gray-200 hover:border-gray-300 transition-all">
+  <!-- Card content -->
+</div>
+```
+
+## Security messaging
+
+Emphasis on security and trust:
+- Stripe payment processing
+- Encrypted transactions
+- Official tax receipts
+- Cancel anytime flexibility
+
+## Performance optimization
+
+**Hero image preload:**
+
+```astro
+<link rel="preload" href={heroImage.url} as="image" fetchpriority="high" />
+```
+
+## Typography
+
+Albert Sans font throughout:
+
+```css
+* {
+  font-family: 'Albert Sans', system-ui, sans-serif;
+}
+```
+
+## Related components
+
+- [DonationForm](/components/donation-form) - Payment processing
+- [Layout](/concepts/layouts) - Page wrapper and layout system
+
+## Related pages
+
+- [Home page](/pages/home) - Main landing with donation section
+- [Programs page](/pages/programs) - Ministries supported by giving
