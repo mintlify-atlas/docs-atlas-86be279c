@@ -69,6 +69,25 @@ Components that showcase dynamic content and testimonies.
   </Card>
 </CardGroup>
 
+## Additional Components
+
+The website also includes several utility and layout components not individually documented but used throughout the site:
+
+**Layout Components** (`src/ui/`):
+- **Header** - Site navigation with mobile menu, used in all pages via Layout
+- **Footer** - Site footer with contact info and links, used in all pages via Layout
+
+**Utility Components** (used internally by Layout):
+- **AlertSmall** - Compact alert messages used in Layout for site-wide announcements
+- **LocationPermission** - Prompts users for location access when needed
+- **PrivacyBanner** - Privacy notification banner shown in Layout
+- **LocationMap** - Interactive Mapbox map component (documented in [Worship page](/pages/worship))
+- **SharePost** - Social sharing buttons (documented in [Blog page](/pages/blog))
+- **ExternalLinkWarning** - Warning modal when leaving the site
+- **SelfXSS** - Console warning to prevent self-XSS attacks
+
+These components are typically imported and used automatically by the Layout or specific pages and don't require direct implementation by developers working on content pages.
+
 ## Component Architecture
 
 ### Astro Components (.astro)

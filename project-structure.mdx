@@ -11,7 +11,7 @@ The Lake Ozark Christian Church website follows a clear, organized structure tha
 
 Here's the complete project structure:
 
-```
+```plaintext
 lake-ozark-christian-church/
 ├── .codesandbox/        # CodeSandbox configuration
 ├── .git/                # Git version control
@@ -34,7 +34,7 @@ lake-ozark-christian-church/
 ├── tsconfig.json       # TypeScript configuration
 ├── package.json        # Dependencies and scripts
 └── README.md           # Project documentation
-```
+```plaintext
 
 ## Core directories
 
@@ -42,7 +42,7 @@ lake-ozark-christian-church/
 
 The `src/pages/` directory is the heart of the routing system. Each file automatically becomes a route on the website.
 
-```
+```plaintext
 src/pages/
 ├── index.astro           # Homepage (/) 
 ├── about.astro           # About page (/about)
@@ -77,7 +77,7 @@ src/pages/
 │   └── ...               # Legal pages
 └── wp-admin/
     └── ...               # WordPress admin redirects
-```
+```plaintext
 
 <Note>
   Files in `src/pages/` can be `.astro`, `.md`, or `.ts` (for API routes). Dynamic routes use bracket notation like `[ID].astro`.
@@ -114,13 +114,13 @@ try {
 <Layout title="Home">
   <!-- Page content -->
 </Layout>
-```
+```plaintext
 
 ### `src/components/` - Reusable components
 
 The components directory contains reusable Astro and React components used throughout the site:
 
-```
+```plaintext
 src/components/
 ├── AccessibilityMenu.astro   # Accessibility customization menu
 ├── AlertBanner.astro         # Site-wide alert/announcement banner
@@ -138,7 +138,7 @@ src/components/
 ├── SharePost.astro          # Social sharing buttons
 ├── SundayCalendar.astro     # Sunday service calendar
 └── WeatherBanner.astro      # Weather alert banner
-```
+```plaintext
 
 <Note>
   Components with `.tsx` extension are React components. All others are Astro components.
@@ -171,7 +171,7 @@ export default function SalvationMarquee({ testimonies = defaultTestimonies }: P
     </div>
   );
 }
-```
+```plaintext
 
 **Example Astro component** usage:
 
@@ -184,18 +184,18 @@ import PrayerRequestForm from '../components/PrayerRequestForm.astro';
   <h2>Submit a Prayer Request</h2>
   <PrayerRequestForm />
 </div>
-```
+```plaintext
 
 ### `src/layouts/` - Page templates
 
 Layouts provide consistent structure and styling across pages:
 
-```
+```plaintext
 src/layouts/
 ├── Layout.astro       # Primary layout for all standard pages
 ├── LegalLayout.astro  # Layout for legal pages (privacy, terms)
 └── LiveLayout.astro   # Layout for live stream page
-```
+```plaintext
 
 **The main Layout component** (`Layout.astro`):
 
@@ -236,7 +236,7 @@ const {
     <LocationPermission />
   </body>
 </html>
-```
+```plaintext
 
 **Key features**:
 - SEO optimization with meta tags and structured data
@@ -249,14 +249,14 @@ const {
 
 Utility functions provide reusable logic for common tasks:
 
-```
+```plaintext
 src/utils/
 ├── liturgicalCalendar.ts     # Liturgical season calculations
 ├── fetchYouTubeVideos.js     # YouTube API integration
 ├── locationCheck.ts          # Visitor location detection (TypeScript)
 ├── locationCheck.js          # Location detection (JavaScript version)
 └── clientThumbnailGenerator.js # Client-side thumbnail generation
-```
+```plaintext
 
 **Example: Liturgical Calendar** (`liturgicalCalendar.ts`):
 
@@ -293,7 +293,7 @@ export function getLiturgicalSeason(date: Date): LiturgicalSeason {
   
   // Additional season logic...
 }
-```
+```plaintext
 
 **Usage in components**:
 
@@ -308,17 +308,17 @@ const season = getLiturgicalSeason(today);
 <div style={`background-color: ${season.color}`}>
   <p>{season.message}</p>
 </div>
-```
+```plaintext
 
 ### `src/ui/` - UI framework components
 
 Core UI components that form the site's navigation and structure:
 
-```
+```plaintext
 src/ui/
 ├── Header.astro   # Site header with navigation
 └── Footer.astro   # Site footer with links and info
-```
+```plaintext
 
 These components are included in the main `Layout.astro` and appear on every page.
 
@@ -326,13 +326,13 @@ These components are included in the main `Layout.astro` and appear on every pag
 
 Markdown files for blog posts:
 
-```
+```plaintext
 src/blogs/
 ├── 1.md   # First blog post
 ├── 2.md   # Second blog post
 ├── 3.md   # Third blog post
 └── 4.md   # Fourth blog post
-```
+```plaintext
 
 **Blog post structure**:
 
@@ -346,7 +346,7 @@ excerpt: "We're excited to announce the launch of our new website..."
 ---
 
 Content of the blog post goes here...
-```
+```plaintext
 
 **Dynamic routing** (`src/pages/blog/[ID].astro`):
 
@@ -371,19 +371,19 @@ const { Content } = await post;
     <Content />
   </article>
 </Layout>
-```
+```plaintext
 
 ### `public/` - Static assets
 
 Static files served directly without processing:
 
-```
+```plaintext
 public/
 ├── favicon.ico          # Browser favicon
 ├── favicon.svg          # SVG favicon
 ├── LOCC-header.png      # Header logo image
 └── cards like.json      # JSON data file
-```
+```plaintext
 
 <Warning>
   Files in `public/` are served at the root path. `public/favicon.ico` becomes `/favicon.ico` in production.
@@ -421,7 +421,7 @@ export default defineConfig({
     }
   }
 });
-```
+```plaintext
 
 ### `tailwind.config.mjs`
 
@@ -448,7 +448,7 @@ export default {
   },
   plugins: [],
 }
-```
+```plaintext
 
 **Usage in components**:
 
@@ -456,7 +456,7 @@ export default {
 <button class="bg-brand hover:bg-brand-dark text-white px-6 py-3 rounded">
   Click Me
 </button>
-```
+```plaintext
 
 ### `package.json`
 
@@ -487,7 +487,7 @@ Project dependencies and scripts:
     "@sentry/astro": "^9.46.0"
   }
 }
-```
+```plaintext
 
 ## Architecture patterns
 
@@ -505,7 +505,7 @@ const userIP = Astro.request.headers.get('x-forwarded-for');
 ---
 
 <p>Your IP: {userIP}</p>
-```
+```plaintext
 
 ### Hybrid rendering
 
@@ -533,7 +533,7 @@ import Footer from '../ui/Footer.astro';
     <PrayerRequestForm />
   </div>
 </Layout>
-```
+```plaintext
 
 ## Next steps
 
