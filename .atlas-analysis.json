@@ -1,0 +1,123 @@
+{
+  "projectType": "frontend",
+  "projectName": "Lake Ozark Christian Church",
+  "projectDescription": "A church website built with Astro featuring worship services, programs, and community engagement.",
+  "theme": "almond",
+  "primaryColor": "#9e1e3e",
+  "lightColor": "#b84660",
+  "darkColor": "#841834",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "project-structure"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/pages-routing",
+              "concepts/components",
+              "concepts/layouts"
+            ]
+          },
+          {
+            "group": "Components",
+            "pages": [
+              "components/overview",
+              "components/accessibility-menu",
+              "components/alert-banner",
+              "components/cookie-banner",
+              "components/donation-form",
+              "components/prayer-request-form",
+              "components/salvation-marquee",
+              "components/seasonal-banner",
+              "components/sunday-calendar",
+              "components/weather-banner"
+            ]
+          },
+          {
+            "group": "Pages",
+            "pages": [
+              "pages/home",
+              "pages/about",
+              "pages/worship",
+              "pages/programs",
+              "pages/children-youth",
+              "pages/giving",
+              "pages/blog"
+            ]
+          },
+          {
+            "group": "Utilities",
+            "pages": [
+              "utilities/location-check",
+              "utilities/liturgical-calendar",
+              "utilities/youtube-videos"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "API Routes",
+            "pages": [
+              "api/thumbnail-proxy",
+              "api/videos-json"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Deployment",
+        "groups": [
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/vercel",
+              "deployment/configuration"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Server-side rendered pages with Astro",
+    "React components for interactive features",
+    "Location-based content (local visitor detection)",
+    "YouTube video integration",
+    "Liturgical calendar utilities",
+    "Donation and prayer request forms",
+    "Accessibility menu and seasonal banners",
+    "Blog system with markdown",
+    "API routes for thumbnail proxying and video data"
+  ],
+  "publicApiSurface": [
+    "/api/thumbnail-proxy.ts - Thumbnail proxy endpoint",
+    "/api/videos.json.ts - Videos JSON API endpoint",
+    "isLocalVisitor() - Location check utility",
+    "fetchYouTubeVideos() - YouTube video fetching",
+    "liturgicalCalendar utilities - Calendar calculations",
+    "Layout component - Base page layout",
+    "Header component - Site navigation",
+    "Footer component - Site footer",
+    "AccessibilityMenu - Accessibility features",
+    "AlertBanner - Alert notifications",
+    "CookieBanner - Cookie consent",
+    "DonationForm - Donation processing",
+    "PrayerRequestForm - Prayer requests",
+    "SalvationMarquee - Rotating salvation message",
+    "SeasonalBanner - Seasonal messaging",
+    "SundayCalendar - Service schedule",
+    "WeatherBanner - Weather alerts"
+  ]
+}
